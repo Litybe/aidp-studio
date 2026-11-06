@@ -53,7 +53,7 @@ const indexRoute = createRoute({
 const pages = [
   createRoute({ getParentRoute: () => rootRoute, path: '/board', component: lazyRouteComponent(() => import('./pages/BoardPage')) }),
   createRoute({ getParentRoute: () => rootRoute, path: '/inbox', component: lazyRouteComponent(() => import('./pages/InboxPage')) }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/unity', component: lazyRouteComponent(() => import('./pages/UnityPage')) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/unity', component: lazyRouteComponent(() => import('./pages/unity/UnityPage')) }),
   createRoute({ getParentRoute: () => rootRoute, path: '/budget', component: lazyRouteComponent(() => import('./pages/BudgetPage')) }),
   createRoute({
     getParentRoute: () => rootRoute,
