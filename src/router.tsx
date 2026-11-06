@@ -58,7 +58,7 @@ const pages = [
   createRoute({
     getParentRoute: () => rootRoute,
     path: '/settings',
-    component: lazyRouteComponent(() => import('./pages/SettingsPage')),
+    component: lazyRouteComponent(() => import('./pages/settings/SettingsPage')),
   }),
 ] as const
 
