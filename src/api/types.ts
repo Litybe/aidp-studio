@@ -95,7 +95,7 @@ export type InboxKind =
 /** One item of `GET /api/inbox`, most urgent first. */
 export interface InboxEntry {
   kind: InboxKind
-  action: 'reply' | 'launch' | 'open' | 'dismiss'
+  action: 'reply' | 'launch' | 'open' | 'dismiss' | 'decide'
   title: string
   detail?: string
   sessionId?: string
@@ -122,3 +122,9 @@ export interface BusEvent {
   ts: number
   data: unknown
 }
+
+// Types of the F1 pages, kept in their own files (grouped re-exports).
+export * from './types/tickets'
+export * from './types/flows'
+export * from './types/inbox'
+export * from './types/runs'

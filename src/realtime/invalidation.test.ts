@@ -10,7 +10,7 @@ const ids = (keys: QueryKey[]) => keys.map(keyId).sort()
 describe('keysForEvent', () => {
   it('maps a flow step to the flow list and that flow', () => {
     expect(ids(keysForEvent(event('flow.step_changed', { key: 'GH-12', stepId: 'review' })))).toEqual(
-      ids([queryKeys.flows, queryKeys.flow('GH-12')]),
+      ids([queryKeys.flows, queryKeys.flow('GH-12'), queryKeys.tickets]),
     )
   })
 
@@ -27,14 +27,14 @@ describe('keysForEvent', () => {
   it('unions exact and prefix rules without duplicates', () => {
     const keys = keysForEvent(event('session.ended'))
     expect(ids(keys)).toEqual(
-      ids([queryKeys.sessions, queryKeys.gatewayStatus, queryKeys.inbox, queryKeys.budget, queryKeys.usage]),
+      ids([queryKeys.sessions, queryKeys.gatewayStatus, queryKeys.inbox, queryKeys.budget, queryKeys.usage, queryKeys.tickets]),
     )
     expect(new Set(ids(keys)).size).toBe(keys.length)
   })
 
   it('ignores an unknown type and a missing flow key', () => {
     expect(keysForEvent(event('overflow'))).toEqual([])
-    expect(ids(keysForEvent(event('flow.started', {})))).toEqual(ids([queryKeys.flows]))
+    expect(ids(keysForEvent(event('flow.started', {})))).toEqual(ids([queryKeys.flows, queryKeys.tickets]))
   })
 
   it('does not take a prefix for a longer word', () => {
@@ -62,7 +62,7 @@ describe('InvalidationBatcher', () => {
     vi.advanceTimersByTime(1)
     expect(flush).toHaveBeenCalledTimes(1)
     expect(ids(flush.mock.calls[0]?.[0] ?? [])).toEqual(
-      ids([queryKeys.flows, queryKeys.flow('GH-12'), queryKeys.budget, queryKeys.gatewayStatus]),
+      ids([queryKeys.flows, queryKeys.flow('GH-12'), queryKeys.tickets, queryKeys.budget, queryKeys.gatewayStatus]),
     )
     vi.advanceTimersByTime(10 * INVALIDATION_WINDOW_MS)
     expect(flush).toHaveBeenCalledTimes(1)

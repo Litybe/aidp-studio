@@ -35,6 +35,7 @@ const flowOf = (event: BusEvent): QueryKey[] => {
 export const INVALIDATION_RULES: readonly InvalidationRule[] = [
   { type: 'flow.*', keys: always(queryKeys.flows) },
   { type: 'flow.*', keys: flowOf },
+  { type: 'flow.*', keys: always(queryKeys.tickets) }, // F1: `flowSummary` of the board cards
   { type: 'flow.waiting_you', keys: always(queryKeys.inbox) },
   { type: 'flow.ended', keys: always(queryKeys.inbox, queryKeys.tickets) },
   { type: 'ticket.*', keys: always(queryKeys.tickets) },
@@ -45,7 +46,7 @@ export const INVALIDATION_RULES: readonly InvalidationRule[] = [
   { type: 'session.started', keys: always(queryKeys.inbox) },
   { type: 'session.question', keys: always(queryKeys.inbox) },
   { type: 'session.answered', keys: always(queryKeys.inbox) },
-  { type: 'session.ended', keys: always(queryKeys.inbox, queryKeys.budget, queryKeys.usage) },
+  { type: 'session.ended', keys: always(queryKeys.inbox, queryKeys.budget, queryKeys.usage, queryKeys.tickets) },
   { type: 'session.queued', keys: always(queryKeys.queue) },
   { type: 'session.dequeued', keys: always(queryKeys.queue) },
   { type: 'sessions.purged', keys: always(queryKeys.sessions, queryKeys.inbox) },

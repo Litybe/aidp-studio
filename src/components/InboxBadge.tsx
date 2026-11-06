@@ -1,9 +1,9 @@
 import { memo } from 'react'
-import { useInboxCount } from '../api/queries'
+import { useInboxTotal } from '../api/f1queries'
 
 /** Number of inbox items waiting for a decision; nothing when there is none. */
 export const InboxBadge = memo(function InboxBadge() {
-  const count = useInboxCount().data ?? 0
+  const count = useInboxTotal()
   if (count === 0) return null
   return (
     <span
