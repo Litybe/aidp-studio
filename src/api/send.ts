@@ -123,3 +123,11 @@ export function retryOptional(failures: number, error: unknown): boolean {
   if (error instanceof ApiError && (error.kind === 'unreachable' || isUnsupported(error))) return false
   return failures < 2
 }
+
+/** Daemon errors for one field, whether the path reads `night_mode` or `budget.night_mode`. */
+export function fieldErrors(error: unknown, field: string): string[] {
+  if (!(error instanceof ApiValidationError)) return []
+  const out: string[] = []
+  for (const [path, messages] of error.byPath()) if (path === field || path.endsWith(`.${field}`)) out.push(...messages)
+  return out
+}
