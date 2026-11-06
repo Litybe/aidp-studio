@@ -37,6 +37,11 @@ export function Sidebar() {
           </Link>
         </li>
         <li>
+          <Link to="/art" className={LINK} activeProps={ACTIVE}>
+            Art
+          </Link>
+        </li>
+        <li>
           <Link to="/settings" className={LINK} activeProps={ACTIVE}>
             Réglages
           </Link>

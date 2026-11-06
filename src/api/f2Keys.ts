@@ -12,6 +12,6 @@ export const f2Keys = {
   memoryList: (status: string, kind: string, q: string) => ['memory', 'list', status, kind, q] as const,
   memoryProposed: ['memory', 'proposed'] as const,
   ragSearch: (q: string, source: string) => ['rag', q, source] as const,
-  artTickets: ['art', 'tickets'] as const,
-  artFiles: (ticketKey: string) => ['art', 'files', ticketKey] as const,
+  artTickets: ['tickets', 'art'] as const,
+  artFiles: (ticketKey: string) => ['runs', 'art-files', ticketKey] as const,
 }

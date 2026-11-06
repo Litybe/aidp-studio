@@ -56,6 +56,7 @@ const pages = [
   createRoute({ getParentRoute: () => rootRoute, path: '/unity', component: lazyRouteComponent(() => import('./pages/unity/UnityPage')) }),
   createRoute({ getParentRoute: () => rootRoute, path: '/budget', component: lazyRouteComponent(() => import('./pages/budget/BudgetPage')) }),
   createRoute({ getParentRoute: () => rootRoute, path: '/memory', component: lazyRouteComponent(() => import('./pages/memory/MemoryPage')) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/art', component: lazyRouteComponent(() => import('./pages/art/ArtPage')) }),
   createRoute({
     getParentRoute: () => rootRoute,
     path: '/settings',
