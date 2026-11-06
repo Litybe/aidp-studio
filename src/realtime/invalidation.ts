@@ -60,6 +60,7 @@ export const INVALIDATION_RULES: readonly InvalidationRule[] = [
   { type: 'run.waiting_gate', keys: always(queryKeys.inbox) },
   { type: 'worktree.*', keys: always(queryKeys.worktrees) },
   { type: 'unity.*', keys: always(f2Keys.unity) },
+  { type: 'memory.*', keys: always(f2Keys.memory) },
   { type: 'preset.saved', keys: always(queryKeys.presets) },
 ]
 

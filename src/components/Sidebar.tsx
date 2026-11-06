@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { InboxBadge } from './InboxBadge'
+import { MemoryBadge } from './MemoryBadge'
 
 const LINK = 'flex items-center justify-between rounded px-3 py-1.5 text-slate-300 hover:bg-slate-800 hover:text-white'
 const ACTIVE = { className: 'bg-slate-800 text-white' }
@@ -27,6 +28,12 @@ export function Sidebar() {
         <li>
           <Link to="/budget" className={LINK} activeProps={ACTIVE}>
             Budget
+          </Link>
+        </li>
+        <li>
+          <Link to="/memory" className={LINK} activeProps={ACTIVE}>
+            Mémoire
+            <MemoryBadge />
           </Link>
         </li>
         <li>
