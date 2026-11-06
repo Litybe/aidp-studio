@@ -3,7 +3,7 @@ import { DaemonIndicator } from './DaemonIndicator'
 import { Gauges } from './Gauges'
 import { InboxBadge } from './InboxBadge'
 import { ProjectSelector } from './ProjectSelector'
-import { StatusDot } from './StatusDot'
+import { UnityIndicator } from './UnityIndicator'
 
 /** Always visible: name, project, daemon, Unity, the 5 h and 7 d windows, the inbox. */
 export function TopBar() {
@@ -12,10 +12,7 @@ export function TopBar() {
       <span className="font-semibold tracking-wide text-slate-100">aidp-studio</span>
       <ProjectSelector />
       <DaemonIndicator />
-      <span className="flex items-center gap-1.5" title="GET /api/unity/status n'existe pas encore">
-        <StatusDot tone="muted" />
-        <span className="text-slate-400">Unity : inconnu</span>
-      </span>
+      <UnityIndicator />
       <div className="ml-auto flex items-center gap-5">
         <Gauges />
         <Link to="/inbox" className="flex items-center gap-1.5 text-slate-300 hover:text-white" aria-label="Inbox">

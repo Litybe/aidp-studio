@@ -54,12 +54,14 @@ const pages = [
   createRoute({ getParentRoute: () => rootRoute, path: '/board', component: lazyRouteComponent(() => import('./pages/board/BoardPage')) }),
   createRoute({ getParentRoute: () => rootRoute, path: '/issue/$key', component: lazyRouteComponent(() => import('./pages/issue/IssuePage')) }),
   createRoute({ getParentRoute: () => rootRoute, path: '/inbox', component: lazyRouteComponent(() => import('./pages/inbox/InboxPage')) }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/unity', component: lazyRouteComponent(() => import('./pages/UnityPage')) }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/budget', component: lazyRouteComponent(() => import('./pages/BudgetPage')) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/unity', component: lazyRouteComponent(() => import('./pages/unity/UnityPage')) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/budget', component: lazyRouteComponent(() => import('./pages/budget/BudgetPage')) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/memory', component: lazyRouteComponent(() => import('./pages/memory/MemoryPage')) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/art', component: lazyRouteComponent(() => import('./pages/art/ArtPage')) }),
   createRoute({
     getParentRoute: () => rootRoute,
     path: '/settings',
-    component: lazyRouteComponent(() => import('./pages/SettingsPage')),
+    component: lazyRouteComponent(() => import('./pages/settings/SettingsPage')),
   }),
 ] as const
 

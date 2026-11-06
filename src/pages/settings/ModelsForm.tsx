@@ -1,0 +1,95 @@
+import { useState, type FormEvent } from 'react'
+import { fieldErrors } from '../../api/send'
+import { ROUTES } from '../../api/types/budget'
+import { MODEL_IDS, STAGE_IDS, type ModelsSettings } from '../../api/types/settings'
+import { formatTokens } from '../../components/BarChart'
+import { useSaveSetting } from './queries'
+import { SaveStatus } from './RoutingForm'
+
+/** Without an entry the template's own model applies. */
+const DEFAULT_CHOICE = ''
+
+/** Drops empty choices and routes left empty before the table goes to the daemon. */
+export function cleanModels(models: ModelsSettings): ModelsSettings {
+  const out: ModelsSettings = {}
+  for (const [route, stages] of Object.entries(models)) {
+    const kept = Object.fromEntries(Object.entries(stages).filter(([, model]) => model !== DEFAULT_CHOICE))
+    if (Object.keys(kept).length > 0) out[route] = kept
+  }
+  return out
+}
+
+/** Model policy route x stage (C5, T5). `averages` is the mean tokens per session of each stage, to decide downgrades. */
+export function ModelsForm({ settings, averages }: { settings: ModelsSettings; averages: ReadonlyMap<string, number> }) {
+  const save = useSaveSetting<ModelsSettings>('models')
+  const [models, setModels] = useState<ModelsSettings>(() => structuredClone(settings))
+
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    save.mutate(cleanModels(models))
+  }
+
+  return (
+    <form onSubmit={submit} className="flex flex-col gap-3" aria-label="Politique de modèles">
+      <div className="overflow-auto">
+        <table className="text-left text-xs">
+          <thead className="text-slate-400">
+            <tr>
+              <th className="pr-3 font-normal">Stage</th>
+              {ROUTES.map((route) => (
+                <th key={route} className="pr-2 font-normal">
+                  {route}
+                </th>
+              ))}
+              <th className="pl-2 text-right font-normal">Moy. tokens / session</th>
+            </tr>
+          </thead>
+          <tbody>
+            {STAGE_IDS.map((stage) => (
+              <tr key={stage}>
+                <td className="pr-3 text-slate-300">{stage}</td>
+                {ROUTES.map((route) => {
+                  const errors = fieldErrors(save.error, `${route}.${stage}`)
+                  return (
+                    <td key={route} className="pr-2 py-0.5">
+                      <select
+                        className="rounded border border-slate-700 bg-slate-950 px-1 py-0.5"
+                        aria-label={`${route} ${stage}`}
+                        aria-invalid={errors.length > 0}
+                        title={errors.join(' ; ')}
+                        value={models[route]?.[stage] ?? DEFAULT_CHOICE}
+                        onChange={(event) => {
+                          const value = event.target.value
+                          setModels((current) => ({ ...current, [route]: { ...current[route], [stage]: value } }))
+                        }}
+                      >
+                        <option value={DEFAULT_CHOICE}>défaut</option>
+                        {MODEL_IDS.map((model) => (
+                          <option key={model} value={model}>
+                            {model}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.length > 0 ? (
+                        <span role="alert" className="ml-1 text-rose-400">
+                          {errors.join(' ; ')}
+                        </span>
+                      ) : null}
+                    </td>
+                  )
+                })}
+                <td className="pl-2 text-right tabular-nums text-slate-400">{averages.has(stage) ? formatTokens(averages.get(stage) ?? 0) : '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex items-center gap-3">
+        <button type="submit" className="rounded bg-sky-600 px-3 py-1 font-medium text-white hover:bg-sky-500 disabled:opacity-50" disabled={save.isPending}>
+          Enregistrer les modèles
+        </button>
+        <SaveStatus error={save.error} success={save.isSuccess} />
+      </div>
+    </form>
+  )
+}

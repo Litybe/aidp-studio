@@ -1,4 +1,5 @@
 import type { QueryKey } from '@tanstack/react-query'
+import { f2Keys } from '../api/f2Keys'
 import { queryKeys } from '../api/queries'
 import type { BusEvent } from '../api/types'
 import type { VisibilitySource } from '../lib/visibility'
@@ -59,6 +60,8 @@ export const INVALIDATION_RULES: readonly InvalidationRule[] = [
   { type: 'run.*', keys: always(queryKeys.runs) },
   { type: 'run.waiting_gate', keys: always(queryKeys.inbox) },
   { type: 'worktree.*', keys: always(queryKeys.worktrees) },
+  { type: 'unity.*', keys: always(f2Keys.unity) },
+  { type: 'memory.*', keys: always(f2Keys.memory) },
   { type: 'preset.saved', keys: always(queryKeys.presets) },
 ]
 
