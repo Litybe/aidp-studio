@@ -1,5 +1,7 @@
 import { memo, useState } from 'react'
 import type { ArtImage, ArtTicket } from '../../api/types/art'
+import { useHasToken } from '../../api/auth'
+import { AuthImage } from '../../components/AuthImage'
 import { Async } from '../../components/Async'
 import { ComingSoon } from '../../components/ComingSoon'
 import { isMissing } from '../../api/send'
@@ -10,14 +12,14 @@ import { runFileUrl, useArtTickets, useIssueImages } from './queries'
 /** Pixel art must stay crisp: no smoothing, lazy decoding, size kept to avoid layout jumps. */
 const Thumb = memo(function Thumb({ image }: { image: ArtImage }) {
   const name = image.file.path.split('/').pop() ?? image.file.path
+  // A plain link cannot send the token: with one, the thumbnail is shown without the open-in-tab link.
+  const hasToken = useHasToken()
   return (
     <figure className="flex w-32 flex-col gap-1">
-      <a href={runFileUrl(image.runId, image.file.path)} target="_blank" rel="noreferrer" className="block rounded border border-slate-800 bg-slate-950 p-1">
-        <img
+      <a {...(hasToken ? {} : { href: runFileUrl(image.runId, image.file.path) })} target="_blank" rel="noreferrer" className="block rounded border border-slate-800 bg-slate-950 p-1">
+        <AuthImage
           src={runFileUrl(image.runId, image.file.path)}
           alt={name}
-          loading="lazy"
-          decoding="async"
           width={120}
           height={120}
           style={{ imageRendering: 'pixelated' }}

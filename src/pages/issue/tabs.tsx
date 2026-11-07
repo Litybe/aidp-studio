@@ -1,5 +1,6 @@
 import { useQueries, useQuery } from '@tanstack/react-query'
 import { memo, useState } from 'react'
+import { AuthImage } from '../../components/AuthImage'
 import { apiGetText, isNotFound, runFileUrl } from '../../api/actions'
 import { apiGet } from '../../api/client'
 import { f1Keys, useJournal, useRunDetail } from '../../api/f1queries'
@@ -92,11 +93,9 @@ export const ProofsTab = memo(function ProofsTab({ runIds }: { runIds: readonly 
     <ul className="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-3">
       {images.map((file) => (
         <li key={`${file.runId}/${file.path}`} className="rounded border border-slate-800 bg-slate-900/50 p-2">
-          <img
+          <AuthImage
             src={runFileUrl(file.runId, file.path)}
             alt={file.path}
-            loading="lazy"
-            decoding="async"
             className="max-h-48 w-full object-contain [image-rendering:pixelated]"
           />
           <p className="mt-1 truncate text-xs text-slate-500" title={file.path}>
