@@ -69,6 +69,36 @@ describe('EventStream', () => {
     expect(stream.recent.toArray().map((event) => event.id)).toEqual([7, 8])
   })
 
+  it('asks a fresh single-use token before every (re)connection', async () => {
+    const sources: FakeSource[] = []
+    const order: string[] = []
+    let n = 0
+    const stream = new EventStream({
+      probe: async () => ({ startedAt: STARTED_AT }),
+      onEvent: () => {},
+      onResync: () => {},
+      visibility: new FakeVisibility(),
+      getStreamToken: async () => {
+        order.push('token')
+        return `t${++n}`
+      },
+      createSource: (url) => {
+        order.push('source')
+        const source = new FakeSource(url)
+        sources.push(source)
+        return source
+      },
+    })
+    stream.start()
+    await settle()
+    expect(order).toEqual(['token', 'source'])
+    expect(sources[0]?.url).toBe('/api/events?since=0&es=t1')
+    sources[0]?.fail()
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(sources[1]?.url).toBe('/api/events?since=0&es=t2')
+    stream.stop()
+  })
+
   it('reconnects with backoff and resumes after the last id', async () => {
     const { stream, sources, last, resyncs, probe } = setup()
     stream.start()

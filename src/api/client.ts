@@ -1,3 +1,4 @@
+import { authFetch } from './auth'
 import type { ApiErrorBody } from './types'
 
 /** Every route goes through the same origin: the daemon itself, or the Vite proxy in dev. */
@@ -37,7 +38,7 @@ function isJson(response: Response): boolean {
 export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
   let response: Response
   try {
-    response = await fetch(`${API_BASE}${path}`, {
+    response = await authFetch(`${API_BASE}${path}`, {
       headers: { Accept: JSON_TYPE },
       ...(signal ? { signal } : {}),
     })

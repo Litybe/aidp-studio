@@ -9,7 +9,9 @@ import {
 } from '@tanstack/react-router'
 import { Sidebar } from './components/Sidebar'
 import { TopBar } from './components/TopBar'
+import { LoginPage } from './components/LoginPage'
 import { UnreachablePage } from './components/UnreachablePage'
+import { useLoginRequired } from './api/auth'
 import { useConnection } from './realtime/context'
 import type { ConnectionState } from './realtime/events'
 
@@ -17,6 +19,8 @@ const selectUnreachable = (state: ConnectionState) => state.phase === 'unreachab
 
 function Layout() {
   const unreachable = useConnection(selectUnreachable)
+  const loginRequired = useLoginRequired()
+  if (loginRequired) return <LoginPage />
   return (
     <div className="flex h-screen flex-col bg-slate-950 text-sm text-slate-200">
       <TopBar />

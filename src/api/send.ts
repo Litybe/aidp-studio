@@ -1,3 +1,4 @@
+import { authFetch } from './auth'
 import { API_BASE, ApiError } from './client'
 import type { SaveFlags } from './types/budget'
 
@@ -83,7 +84,7 @@ export type SendMethod = 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 export async function apiSend<T>(method: SendMethod, path: string, body?: unknown): Promise<T> {
   let response: Response
   try {
-    response = await fetch(`${API_BASE}${path}`, {
+    response = await authFetch(`${API_BASE}${path}`, {
       method,
       headers: { Accept: JSON_TYPE, ...(body === undefined ? {} : { 'Content-Type': JSON_TYPE }) },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
