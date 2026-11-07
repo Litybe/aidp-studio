@@ -51,6 +51,8 @@ export interface EventStreamOptions {
   createSource?: (url: string) => EventSourceLike
   backoff?: Backoff
   url?: string
+  /** Single-use `?es=` token asked before each (re)connection; null or absent: no parameter. */
+  getStreamToken?: () => Promise<string | null>
   clock?: () => number
 }
 
@@ -151,7 +153,21 @@ export class EventStream {
       this.lastId = 0
       this.options.onResync('restart')
     }
-    const source = this.createSource(`${this.url}?since=${this.lastId}`)
+    let streamToken: string | null = null
+    if (this.options.getStreamToken) {
+      this.connecting = true
+      try {
+        streamToken = await this.options.getStreamToken()
+      } catch {
+        this.connecting = false
+        this.fail('reconnecting')
+        return
+      }
+      this.connecting = false
+      if (this.stopped) return
+    }
+    const query = `since=${this.lastId}${streamToken ? `&es=${encodeURIComponent(streamToken)}` : ''}`
+    const source = this.createSource(`${this.url}?${query}`)
     this.source = source
     this.awaitingFirstEvent = this.everOpened && !restarted
     source.onopen = () => {

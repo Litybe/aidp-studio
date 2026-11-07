@@ -51,7 +51,7 @@ interface ColumnProps {
 
 export const Column = memo(function Column({ label, tickets, queue }: ColumnProps) {
   return (
-    <section className="flex w-72 shrink-0 flex-col" aria-label={label}>
+    <section className="flex w-full shrink-0 snap-start flex-col md:w-72" aria-label={label}>
       <h2 className="mb-2 flex items-center justify-between px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
         {label}
         <span className="rounded bg-slate-800 px-1.5 text-slate-300 tabular-nums">{tickets.length}</span>

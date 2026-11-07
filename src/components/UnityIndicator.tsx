@@ -9,7 +9,7 @@ export const UnityIndicator = memo(function UnityIndicator() {
   if (!query.data) {
     const title = query.error && isMissing(query.error) ? "GET /api/unity/status n'existe pas encore" : 'état Unity indisponible'
     return (
-      <span className="flex items-center gap-1.5" title={title}>
+      <span className="hidden items-center gap-1.5 md:flex" title={title}>
         <StatusDot tone="muted" />
         <span className="text-slate-400">Unity : inconnu</span>
       </span>
@@ -17,7 +17,7 @@ export const UnityIndicator = memo(function UnityIndicator() {
   }
   const { text, tone } = unitySummary(query.data)
   return (
-    <span className="flex items-center gap-1.5" title={query.data.editor.projectPath ?? undefined}>
+    <span className="hidden items-center gap-1.5 md:flex" title={query.data.editor.projectPath ?? undefined}>
       <StatusDot tone={tone} />
       <span className="text-slate-300">Unity : {text}</span>
     </span>

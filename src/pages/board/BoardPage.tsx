@@ -89,7 +89,7 @@ export default function BoardPage() {
       {tickets.isPending ? <p className="text-slate-500">Chargement…</p> : null}
       {tickets.isError ? <p className="text-red-400">Tickets illisibles : {tickets.error.message}</p> : null}
       {data ? (
-        <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2">
+        <div className="flex min-h-0 flex-1 snap-x snap-mandatory gap-3 overflow-x-auto pb-2 md:snap-none">
           {COLUMNS.map((column) => (
             <Column key={column.id} label={column.label} tickets={board[column.id]} queue={queue} />
           ))}

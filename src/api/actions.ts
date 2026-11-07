@@ -1,3 +1,4 @@
+import { authFetch } from './auth'
 import { useMutation } from '@tanstack/react-query'
 import { API_BASE, ApiError } from './client'
 import type { ApiErrorBody } from './types'
@@ -23,7 +24,7 @@ async function toError(response: Response): Promise<ApiError> {
 export async function apiPost<T = unknown>(path: string, body?: unknown): Promise<T> {
   let response: Response
   try {
-    response = await fetch(`${API_BASE}${path}`, {
+    response = await authFetch(`${API_BASE}${path}`, {
       method: 'POST',
       headers: { Accept: JSON_TYPE, ...(body === undefined ? {} : { 'Content-Type': JSON_TYPE }) },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -45,7 +46,7 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
 export async function apiGetText(path: string, signal?: AbortSignal): Promise<string> {
   let response: Response
   try {
-    response = await fetch(`${API_BASE}${path}`, signal ? { signal } : {})
+    response = await authFetch(`${API_BASE}${path}`, signal ? { signal } : {})
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error
     throw new ApiError('unreachable', 'daemon injoignable')

@@ -1,4 +1,5 @@
 import type { QueryClient, QueryKey } from '@tanstack/react-query'
+import { fetchEventToken, onTokenChange } from '../api/auth'
 import { statusQuery } from '../api/queries'
 import { Ticker } from '../lib/ticker'
 import { documentVisibility, type VisibilitySource } from '../lib/visibility'
@@ -30,7 +31,12 @@ export function createRealtime(queryClient: QueryClient, visibility: VisibilityS
         .map((query) => query.queryKey)
       batcher.add(failed)
     },
+    getStreamToken: fetchEventToken,
     visibility,
+  })
+  onTokenChange(() => {
+    batcher.add([EVERY_QUERY])
+    stream.retryNow()
   })
   return { stream, batcher, ticker: new Ticker(visibility) }
 }

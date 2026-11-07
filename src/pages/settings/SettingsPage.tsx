@@ -1,4 +1,5 @@
 import { memo, useState } from 'react'
+import { clearToken } from '../../api/auth'
 import { useGatewayStatus, useProjects } from '../../api/queries'
 import type { GatewayStatus } from '../../api/types'
 import type { ModelsSettings, RoutingSettings } from '../../api/types/settings'
@@ -136,6 +137,21 @@ const CatalogCard = memo(function CatalogCard() {
   )
 })
 
+function LogoutCard() {
+  return (
+    <section className={CARD} aria-label="Connexion">
+      <h2 className="mb-2 font-semibold text-slate-100">Connexion</h2>
+      <button
+        type="button"
+        className="min-h-11 rounded border border-slate-600 px-3 py-1.5 text-slate-200 hover:bg-slate-800"
+        onClick={clearToken}
+      >
+        Se déconnecter
+      </button>
+    </section>
+  )
+}
+
 export default function SettingsPage() {
   const [from] = useState(() => sinceDate(USAGE_DAYS, Date.now()))
   return (
@@ -146,6 +162,7 @@ export default function SettingsPage() {
       <SlotsCard />
       <ProjectCard />
       <CatalogCard />
+      <LogoutCard />
     </section>
   )
 }

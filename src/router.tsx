@@ -7,10 +7,14 @@ import {
   Outlet,
   redirect,
 } from '@tanstack/react-router'
+import { TabBar } from './components/TabBar'
 import { Sidebar } from './components/Sidebar'
 import { Toaster } from './components/Toaster'
 import { TopBar } from './components/TopBar'
+import { LoginPage } from './components/LoginPage'
 import { UnreachablePage } from './components/UnreachablePage'
+import { useLoginRequired } from './api/auth'
+import { useIsMobile } from './lib/media'
 import { useConnection } from './realtime/context'
 import type { ConnectionState } from './realtime/events'
 
@@ -18,14 +22,20 @@ const selectUnreachable = (state: ConnectionState) => state.phase === 'unreachab
 
 function Layout() {
   const unreachable = useConnection(selectUnreachable)
+  const loginRequired = useLoginRequired()
+  const mobile = useIsMobile()
+  if (loginRequired) return <LoginPage />
   return (
-    <div className="flex h-screen flex-col bg-slate-950 text-sm text-slate-200">
+    <div className="flex h-dvh flex-col bg-slate-950 text-sm text-slate-200">
       <TopBar />
       <div className="flex min-h-0 flex-1">
-        <Sidebar />
-        <main className="flex-1 overflow-auto p-6">{unreachable ? <UnreachablePage /> : <Outlet />}</main>
+        {mobile ? null : <Sidebar />}
+        <main className="min-w-0 flex-1 overflow-auto p-3 [overflow-wrap:anywhere] md:p-6">
+          {unreachable ? <UnreachablePage /> : <Outlet />}
+        </main>
       </div>
       <Toaster />
+      {mobile ? <TabBar /> : null}
     </div>
   )
 }

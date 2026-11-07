@@ -112,7 +112,7 @@ export default function IssuePage() {
             <SessionPanel sessionId={sessionId} />
           </div>
           <div>
-            <div role="tablist" className="mb-2 flex gap-1 border-b border-slate-800">
+            <div role="tablist" className="mb-2 flex gap-1 overflow-x-auto border-b border-slate-800">
               {TABS.map((entry) => (
                 <button
                   key={entry.id}
