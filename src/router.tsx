@@ -8,6 +8,7 @@ import {
   redirect,
 } from '@tanstack/react-router'
 import { Sidebar } from './components/Sidebar'
+import { Toaster } from './components/Toaster'
 import { TopBar } from './components/TopBar'
 import { UnreachablePage } from './components/UnreachablePage'
 import { useConnection } from './realtime/context'
@@ -24,6 +25,7 @@ function Layout() {
         <Sidebar />
         <main className="flex-1 overflow-auto p-6">{unreachable ? <UnreachablePage /> : <Outlet />}</main>
       </div>
+      <Toaster />
     </div>
   )
 }

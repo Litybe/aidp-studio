@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { isNotFound } from '../../api/actions'
 import { useFlow, useTicket, useTicketCost, useTicketPr } from '../../api/f1queries'
 import type { Ticket } from '../../api/types'
+import { LaunchRunButton } from '../../components/run/LaunchButtons'
 import { ROUTE_ICON, routeOf, ticketNumber } from '../board/columns'
 import { costLabel } from '../board/TicketCard'
 import { IssueActions } from './IssueActions'
@@ -10,6 +11,8 @@ import { SessionPanel } from './SessionPanel'
 import { ArtifactsTab, AssumptionsTab, JournalTab, ProofsTab } from './tabs'
 import { Timeline } from './Timeline'
 import { buildTimeline, runIdsOf, sessionOfStep } from './flowTimeline'
+
+const ACTIVE_FLOW = new Set(['running', 'pausing', 'waiting_human', 'waiting_external'])
 
 type TabId = 'artifacts' | 'proofs' | 'assumptions' | 'journal'
 const TABS: readonly { id: TabId; label: string }[] = [
@@ -19,7 +22,15 @@ const TABS: readonly { id: TabId; label: string }[] = [
   { id: 'journal', label: 'Journal' },
 ]
 
-function Header({ ticket, flowPr }: { ticket: Ticket; flowPr: { number: number; url?: string | null } | null }) {
+function Header({
+  ticket,
+  flowPr,
+  flowActive,
+}: {
+  ticket: Ticket
+  flowPr: { number: number; url?: string | null } | null
+  flowActive: boolean
+}) {
   const cost = useTicketCost(ticket.key).data
   const pr = useTicketPr(ticket.key, true).data
   const route = ROUTE_ICON[routeOf(ticket)]
@@ -29,7 +40,8 @@ function Header({ ticket, flowPr }: { ticket: Ticket; flowPr: { number: number; 
   return (
     <header className="space-y-1">
       <h1 className="text-lg font-semibold text-slate-100">
-        <span className="font-mono text-slate-400">{ticketNumber(ticket)}</span> {ticket.summary}
+        <span className="font-mono text-slate-400">{ticketNumber(ticket)}</span> {ticket.summary}{' '}
+        {flowActive ? null : <LaunchRunButton ticket={ticket} label="Lancer un run…" />}
       </h1>
       <p className="flex flex-wrap items-center gap-x-3 text-xs text-slate-400">
         <span>{route.label}</span>
@@ -76,7 +88,11 @@ export default function IssuePage() {
 
   return (
     <section className="max-w-5xl space-y-5">
-      <Header ticket={ticket.data.ticket} flowPr={flowData?.pr ?? null} />
+      <Header
+        ticket={ticket.data.ticket}
+        flowPr={flowData?.pr ?? null}
+        flowActive={flowData ? ACTIVE_FLOW.has(flowData.status) : false}
+      />
       {flow.isError ? (
         isNotFound(flow.error) ? (
           <p className="text-sm text-slate-500">Pas de flow actif pour cette issue.</p>
