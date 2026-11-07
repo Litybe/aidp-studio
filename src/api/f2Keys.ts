@@ -5,6 +5,7 @@ export const f2Keys = {
   usageBy: (groupBy: string, from?: string) => ['usage', groupBy, from ?? ''] as const,
   budgetAnomalies: ['budget', 'anomalies'] as const,
   pixellab: ['budget', 'pixellab'] as const,
+  settingsAll: ['settings'] as const,
   settings: (name: string) => ['settings', name] as const,
   catalog: (name: string) => ['catalog', name] as const,
   dispatcherSlots: ['dispatcher', 'slots'] as const,

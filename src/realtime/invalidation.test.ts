@@ -1,4 +1,5 @@
 import type { QueryKey } from '@tanstack/react-query'
+import { f2Keys } from '../api/f2Keys'
 import { queryKeys } from '../api/queries'
 import type { BusEvent } from '../api/types'
 import { FakeVisibility } from '../test/fakes'
@@ -17,6 +18,12 @@ describe('keysForEvent', () => {
   it('maps a ticket transition to the tickets and the ticket flow', () => {
     expect(ids(keysForEvent(event('ticket.status', { key: 'GH-3', from: 'todo', to: 'queued' })))).toEqual(
       ids([queryKeys.tickets, queryKeys.flow('GH-3')]),
+    )
+  })
+
+  it('maps a settings change to the settings, the budget and the dispatcher', () => {
+    expect(ids(keysForEvent(event('settings.changed', { section: 'budget' })))).toEqual(
+      ids([f2Keys.settingsAll, queryKeys.budget, queryKeys.dispatcher]),
     )
   })
 

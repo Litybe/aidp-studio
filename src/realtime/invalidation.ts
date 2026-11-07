@@ -62,6 +62,7 @@ export const INVALIDATION_RULES: readonly InvalidationRule[] = [
   { type: 'worktree.*', keys: always(queryKeys.worktrees) },
   { type: 'unity.*', keys: always(f2Keys.unity) },
   { type: 'memory.*', keys: always(f2Keys.memory) },
+  { type: 'settings.changed', keys: always(f2Keys.settingsAll, queryKeys.budget, queryKeys.dispatcher) },
   { type: 'preset.saved', keys: always(queryKeys.presets) },
 ]
 
