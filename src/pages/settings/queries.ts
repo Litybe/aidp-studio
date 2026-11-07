@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiGet } from '../../api/client'
 import { f2Keys } from '../../api/f2Keys'
-import { apiSend, retryOptional } from '../../api/send'
-import type { CatalogFlow, CatalogTemplate, DispatcherSlots, ModelsSettings, RoutingSettings } from '../../api/types/settings'
+import { apiSend, retryOptional, withoutSaveFlags } from '../../api/send'
+import type { SaveFlags } from '../../api/types/budget'
+import type { CatalogFlow, CatalogTemplate, DispatcherSlots, ModelPolicy, ModelsSettings, RoutingSettings } from '../../api/types/settings'
 import { asList } from '../../lib/format'
 
 export type SettingsName = 'routing' | 'models'
@@ -16,19 +17,22 @@ export function useSetting<T>(name: SettingsName) {
   })
 }
 
-/** `PUT /api/settings/<name>`: validated by the daemon before it writes; a `400` lists the faulty fields. */
-export function useSaveSetting<T>(name: SettingsName) {
+/**
+ * `PUT /api/settings/<name>`: validated by the daemon before it writes; a `400` lists the faulty paths.
+ * The reply has the shape of the `GET` plus {@link SaveFlags}; `settings.changed` refreshes the other readers.
+ */
+export function useSaveSetting<T extends object, Body = T>(name: SettingsName) {
   const client = useQueryClient()
   return useMutation({
-    mutationFn: (value: T) => apiSend<T | undefined>('PUT', `/settings/${name}`, value),
-    onSuccess: (saved, sent) => {
-      client.setQueryData(f2Keys.settings(name), saved && typeof saved === 'object' ? saved : sent)
-    },
+    mutationFn: (body: Body) => apiSend<T & SaveFlags>('PUT', `/settings/${name}`, body),
+    onSuccess: (saved) => client.setQueryData(f2Keys.settings(name), withoutSaveFlags(saved)),
   })
 }
 
 export const useRouting = () => useSetting<RoutingSettings>('routing')
 export const useModels = () => useSetting<ModelsSettings>('models')
+export const useSaveRouting = () => useSaveSetting<RoutingSettings>('routing')
+export const useSaveModels = () => useSaveSetting<ModelsSettings, { models: ModelPolicy }>('models')
 
 export function useCatalog<T extends { id: string }>(name: 'flows' | 'templates') {
   return useQuery({

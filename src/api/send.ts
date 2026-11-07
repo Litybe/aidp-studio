@@ -1,4 +1,5 @@
 import { API_BASE, ApiError } from './client'
+import type { SaveFlags } from './types/budget'
 
 const JSON_TYPE = 'application/json'
 
@@ -130,4 +131,12 @@ export function fieldErrors(error: unknown, field: string): string[] {
   const out: string[] = []
   for (const [path, messages] of error.byPath()) if (path === field || path.endsWith(`.${field}`)) out.push(...messages)
   return out
+}
+
+/** A `PUT /api/settings/*` reply without its `reloadRequired` and `changed` flags: the shape of the `GET`. */
+export function withoutSaveFlags<T extends object>(reply: T): T {
+  const settings: Partial<T & SaveFlags> = { ...reply }
+  delete settings.reloadRequired
+  delete settings.changed
+  return settings as T
 }

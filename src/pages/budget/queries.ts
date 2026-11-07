@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiGet } from '../../api/client'
 import { f2Keys } from '../../api/f2Keys'
-import { apiSend, retryOptional } from '../../api/send'
-import type { BudgetSettings, CostAnomaly, PixellabBalance, UsageBucket, UsageGroupBy, UsageResponse } from '../../api/types/budget'
+import { apiSend, retryOptional, withoutSaveFlags } from '../../api/send'
+import type { BudgetSettings, BudgetUpdate, CostAnomaly, PixellabBalance, SaveFlags, UsageBucket, UsageGroupBy, UsageResponse } from '../../api/types/budget'
 import type { BarItem } from '../../components/BarChart'
 import { asList } from '../../lib/format'
 
@@ -52,14 +52,12 @@ export function useBudgetSettings() {
   })
 }
 
-/** `PUT /api/settings/budget`: the daemon validates before writing; a `400` lists the faulty fields. */
+/** `PUT /api/settings/budget`: any subset of the keys; the daemon checks them before it writes, and a `400` lists the faulty paths. */
 export function useSaveBudget() {
   const client = useQueryClient()
   return useMutation({
-    mutationFn: (settings: BudgetSettings) => apiSend<BudgetSettings | undefined>('PUT', '/settings/budget', settings),
-    onSuccess: (saved, sent) => {
-      client.setQueryData(f2Keys.settings('budget'), saved && typeof saved === 'object' ? saved : sent)
-    },
+    mutationFn: (update: BudgetUpdate) => apiSend<BudgetSettings & SaveFlags>('PUT', '/settings/budget', update),
+    onSuccess: (saved) => client.setQueryData(f2Keys.settings('budget'), withoutSaveFlags(saved)),
   })
 }
 

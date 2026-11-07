@@ -42,14 +42,49 @@ export interface CostAnomaly {
   at?: string
 }
 
+/** Token ceilings of `budget.per_ticket` (tokens, `0` = no ceiling); `default` covers a ticket without route. */
+export type PerTicketBudget = Record<Route | 'default', number>
+
+/** `dispatcher.night` of `TODO/config.yaml`; `start` and `end` are local `HH:MM`. */
+export interface NightSettings {
+  enabled: boolean
+  start: string
+  end: string
+  heavy_after_reset: boolean
+  heavy_window_minutes: number
+}
+
 /**
- * `GET`/`PUT /api/settings/budget` (`TODO/config.yaml`, `budget:`). Keys the page does not know are
- * sent back untouched. Names follow the plan (T3 `per_ticket`, T6 night mode and 7 d stop).
+ * `GET /api/settings/budget`: the keys of `TODO/config.yaml`, unchanged (snake_case). Utilizations and
+ * reserves are fractions 0..1, `stop_at_7d_percent` a percentage (`85` = 85 %) or `null` when unset.
  */
 export interface BudgetSettings {
-  per_ticket?: Partial<Record<Route, number>>
-  night_mode?: boolean
-  /** Fraction 0..1 of the 7 d window at which the dispatcher stops. */
-  stop_7d?: number
-  [key: string]: unknown
+  budget: {
+    max_utilization_5h: number
+    max_utilization_7d: number
+    reserve_per_run_5h: number
+    reserve_per_run_7d: number
+    unknown_policy: string
+    learn: boolean
+    per_ticket: PerTicketBudget
+    pixellab: { min_reserve: number; per_ticket: number }
+  }
+  dispatcher: { slots: number; stop_at_7d_percent: number | null; night: NightSettings }
+}
+
+/** Body of `PUT /api/settings/budget`: any subset of the keys; `stop_at_7d_percent: null` clears the stop. */
+export interface BudgetUpdate {
+  budget?: {
+    per_ticket?: Partial<PerTicketBudget>
+    pixellab?: Partial<BudgetSettings['budget']['pixellab']>
+  }
+  dispatcher?: { slots?: number; stop_at_7d_percent?: number | null; night?: Partial<NightSettings> }
+}
+
+/** Reply flags of every `PUT /api/settings/*`; the rest of the reply has the shape of the `GET`. */
+export interface SaveFlags {
+  /** A daemon restart is needed for the change to apply (never, today: the files are reread). */
+  reloadRequired: boolean
+  /** `false` when the body changed nothing and the file was left alone. */
+  changed: boolean
 }

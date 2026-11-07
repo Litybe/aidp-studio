@@ -1,17 +1,17 @@
 import { useState, type FormEvent } from 'react'
 import { fieldErrors } from '../../api/send'
 import { ROUTES } from '../../api/types/budget'
-import { MODEL_IDS, STAGE_IDS, type ModelsSettings } from '../../api/types/settings'
+import { MODEL_IDS, STAGE_IDS, type ModelPolicy, type ModelsSettings } from '../../api/types/settings'
 import { formatTokens } from '../../components/BarChart'
-import { useSaveSetting } from './queries'
-import { SaveStatus } from './RoutingForm'
+import { SaveStatus } from '../../components/SaveStatus'
+import { useSaveModels } from './queries'
 
 /** Without an entry the template's own model applies. */
 const DEFAULT_CHOICE = ''
 
 /** Drops empty choices and routes left empty before the table goes to the daemon. */
-export function cleanModels(models: ModelsSettings): ModelsSettings {
-  const out: ModelsSettings = {}
+export function cleanModels(models: ModelPolicy): ModelPolicy {
+  const out: ModelPolicy = {}
   for (const [route, stages] of Object.entries(models)) {
     const kept = Object.fromEntries(Object.entries(stages).filter(([, model]) => model !== DEFAULT_CHOICE))
     if (Object.keys(kept).length > 0) out[route] = kept
@@ -19,14 +19,24 @@ export function cleanModels(models: ModelsSettings): ModelsSettings {
   return out
 }
 
+/** The usual stage ids first, then the ones the policy names that the daemon does not list. */
+function stageRows(settings: ModelsSettings): string[] {
+  const usual = settings.stages.length > 0 ? settings.stages : [...STAGE_IDS]
+  const extra = new Set(Object.values(settings.models).flatMap((stages) => Object.keys(stages)))
+  for (const stage of usual) extra.delete(stage)
+  return [...usual, ...extra]
+}
+
 /** Model policy route x stage (C5, T5). `averages` is the mean tokens per session of each stage, to decide downgrades. */
 export function ModelsForm({ settings, averages }: { settings: ModelsSettings; averages: ReadonlyMap<string, number> }) {
-  const save = useSaveSetting<ModelsSettings>('models')
-  const [models, setModels] = useState<ModelsSettings>(() => structuredClone(settings))
+  const save = useSaveModels()
+  const [models, setModels] = useState<ModelPolicy>(() => structuredClone(settings.models))
+  const routes = settings.routes.length > 0 ? settings.routes : [...ROUTES]
+  const tiers = settings.tiers.length > 0 ? settings.tiers : [...MODEL_IDS]
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    save.mutate(cleanModels(models))
+    save.mutate({ models: cleanModels(models) })
   }
 
   return (
@@ -36,7 +46,7 @@ export function ModelsForm({ settings, averages }: { settings: ModelsSettings; a
           <thead className="text-slate-400">
             <tr>
               <th className="pr-3 font-normal">Stage</th>
-              {ROUTES.map((route) => (
+              {routes.map((route) => (
                 <th key={route} className="pr-2 font-normal">
                   {route}
                 </th>
@@ -45,11 +55,11 @@ export function ModelsForm({ settings, averages }: { settings: ModelsSettings; a
             </tr>
           </thead>
           <tbody>
-            {STAGE_IDS.map((stage) => (
+            {stageRows(settings).map((stage) => (
               <tr key={stage}>
                 <td className="pr-3 text-slate-300">{stage}</td>
-                {ROUTES.map((route) => {
-                  const errors = fieldErrors(save.error, `${route}.${stage}`)
+                {routes.map((route) => {
+                  const errors = fieldErrors(save.error, `models.${route}.${stage}`)
                   return (
                     <td key={route} className="pr-2 py-0.5">
                       <select
@@ -64,7 +74,7 @@ export function ModelsForm({ settings, averages }: { settings: ModelsSettings; a
                         }}
                       >
                         <option value={DEFAULT_CHOICE}>défaut</option>
-                        {MODEL_IDS.map((model) => (
+                        {tiers.map((model) => (
                           <option key={model} value={model}>
                             {model}
                           </option>
@@ -88,7 +98,7 @@ export function ModelsForm({ settings, averages }: { settings: ModelsSettings; a
         <button type="submit" className="rounded bg-sky-600 px-3 py-1 font-medium text-white hover:bg-sky-500 disabled:opacity-50" disabled={save.isPending}>
           Enregistrer les modèles
         </button>
-        <SaveStatus error={save.error} success={save.isSuccess} />
+        <SaveStatus error={save.error} saved={save.data} />
       </div>
     </form>
   )
