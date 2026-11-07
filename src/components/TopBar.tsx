@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { DaemonIndicator } from './DaemonIndicator'
 import { Gauges } from './Gauges'
+import { NewRunButton } from './run/LaunchButtons'
 import { InboxBadge } from './InboxBadge'
 import { ProjectSelector } from './ProjectSelector'
 import { UnityIndicator } from './UnityIndicator'
@@ -14,6 +15,7 @@ export function TopBar() {
       <DaemonIndicator />
       <UnityIndicator />
       <div className="ml-auto flex items-center gap-5">
+        <NewRunButton />
         <Gauges />
         <Link to="/inbox" className="flex items-center gap-1.5 text-slate-300 hover:text-white" aria-label="Inbox">
           Inbox

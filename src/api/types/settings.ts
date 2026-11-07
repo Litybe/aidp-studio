@@ -82,6 +82,20 @@ export interface CatalogTemplate {
   stageCount?: number
   inputCount?: number
   source?: string
+  /** Declared inputs (C12): a list, or a map keyed by input name. */
+  inputs?: TemplateInput[] | Record<string, Omit<TemplateInput, 'name'>>
+}
+
+/** One declared input of a template; the run form is generated from these. */
+export interface TemplateInput {
+  name: string
+  label?: string
+  description?: string
+  /** `string` (default), `text`, `number`, `boolean`, `enum`. */
+  type?: string
+  required?: boolean
+  default?: unknown
+  options?: string[]
 }
 
 /** `GET /api/dispatcher` `slots`. */

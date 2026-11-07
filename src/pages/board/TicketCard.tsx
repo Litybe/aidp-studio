@@ -4,6 +4,7 @@ import { apiPost, routes, useApiAction } from '../../api/actions'
 import { useTicketCost } from '../../api/f1queries'
 import type { QueueEntry, Ticket, TicketCost } from '../../api/types'
 import { ActionButton, FeedbackLine } from '../../components/ActionControls'
+import { LaunchRunButton } from '../../components/run/LaunchButtons'
 import { elapsedLabel, formatTokens, formatUsd } from '../../lib/format'
 import { useTicker } from '../../realtime/context'
 import { blockedReason, columnOf, ROUTE_ICON, routeOf, ticketNumber } from './columns'
@@ -72,6 +73,7 @@ function CardActions({ ticket, queue }: CardProps) {
       {column === 'ready' || column === 'queued' ? (
         <ActionButton label="Lancer maintenant" tone="primary" onRun={send(routes.ticketStart(ticket.key), {})} />
       ) : null}
+      {!flowActive && column !== 'done' ? <LaunchRunButton ticket={ticket} /> : null}
       {column === 'queued' ? (
         <ActionButton
           label="Monter en priorité"
