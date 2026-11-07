@@ -24,3 +24,18 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Phone: no horizontal page scroll; touch targets of at least 44 px (no hover needed anywhere). */
+html,
+body {
+  overflow-x: hidden;
+}
+
+@media (pointer: coarse) {
+  button,
+  select,
+  input:not([type='checkbox']):not([type='radio']),
+  [role='tab'] {
+    min-height: 44px;
+  }
+}

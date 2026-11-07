@@ -39,7 +39,7 @@ export const Gauge = memo(function Gauge({ label, utilization, resetsAtMs, limit
     <div className="flex items-center gap-2" title={title} data-testid={`gauge-${label}`} data-level={model.level}>
       <span className="font-medium text-slate-300">{label}</span>
       <div
-        className="h-2 w-20 overflow-hidden rounded-sm bg-slate-800"
+        className="h-2 w-10 overflow-hidden md:w-20 rounded-sm bg-slate-800"
         role="meter"
         aria-label={`Fenêtre ${label}`}
         aria-valuemin={0}
@@ -50,7 +50,7 @@ export const Gauge = memo(function Gauge({ label, utilization, resetsAtMs, limit
         <div className={`h-full ${BAR_COLOR[model.level]}`} style={{ width: `${model.percent ?? 0}%` }} />
       </div>
       <span className="tabular-nums text-slate-200">{percentText}</span>
-      <span className="text-xs text-slate-400">{reset}</span>
+      <span className="hidden text-xs text-slate-400 md:inline">{reset}</span>
     </div>
   )
 })

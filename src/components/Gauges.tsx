@@ -12,7 +12,7 @@ export function Gauges() {
   const history = useLastRateLimit(needsHistory)
   const inputs = gaugeInputs(budget.data, needsHistory ? history.data : null)
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2 md:gap-4">
       <Gauge label="5h" source={inputs.source} {...inputs.fiveHour} />
       <Gauge label="7j" source={inputs.source} {...inputs.sevenDay} />
     </div>
