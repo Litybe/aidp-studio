@@ -1,36 +1,18 @@
-import { useMemo, useState } from 'react'
-import { apiPost, routes, useApiAction } from '../../api/actions'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { useQueue, useTickets } from '../../api/f1queries'
-import { useDispatcherBudget } from '../../api/queries'
 import type { TicketRoute } from '../../api/types'
-import { ActionButton, FeedbackLine } from '../../components/ActionControls'
+import { useIsMobile } from '../../lib/media'
 import { buildBoard, COLUMNS, filterOptions, type Filters, NO_FILTERS, ROUTE_ICON } from './columns'
 import { Column } from './Column'
+import { Toolbar } from './Toolbar'
+
+/** The phone view is its own chunk: the desktop never loads it. */
+const BoardMobile = lazy(() => import('./BoardMobile'))
 
 const SELECT = 'rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-200'
 const NO_QUEUE: never[] = []
 
-const selectPaused = (budget: { verdict: { verdict: string } }) => budget.verdict.verdict === 'paused'
-
-function Toolbar() {
-  const paused = useDispatcherBudget(selectPaused).data === true
-  const sync = useApiAction(() => apiPost(routes.ticketsSync))
-  const dispatcher = useApiAction((verb: 'pause' | 'resume') => apiPost(routes.dispatcher(verb)))
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <ActionButton label="Sync GitHub" onRun={() => sync.run()} />
-      <ActionButton
-        label={paused ? 'Reprendre le dispatcher' : 'Pause du dispatcher'}
-        tone={paused ? 'primary' : 'neutral'}
-        onRun={() => dispatcher.run(paused ? 'resume' : 'pause')}
-      />
-      <FeedbackLine feedback={sync.feedback} />
-      <FeedbackLine feedback={dispatcher.feedback} />
-    </div>
-  )
-}
-
-export default function BoardPage() {
+function BoardDesktop() {
   const tickets = useTickets()
   const queue = useQueue().data ?? NO_QUEUE
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
@@ -89,12 +71,23 @@ export default function BoardPage() {
       {tickets.isPending ? <p className="text-slate-500">Chargement…</p> : null}
       {tickets.isError ? <p className="text-red-400">Tickets illisibles : {tickets.error.message}</p> : null}
       {data ? (
-        <div className="flex min-h-0 flex-1 snap-x snap-mandatory gap-3 overflow-x-auto pb-2 md:snap-none">
+        <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2">
           {COLUMNS.map((column) => (
             <Column key={column.id} label={column.label} tickets={board[column.id]} queue={queue} />
           ))}
         </div>
       ) : null}
     </section>
+  )
+}
+
+export default function BoardPage() {
+  const mobile = useIsMobile()
+  return mobile ? (
+    <Suspense fallback={null}>
+      <BoardMobile />
+    </Suspense>
+  ) : (
+    <BoardDesktop />
   )
 }

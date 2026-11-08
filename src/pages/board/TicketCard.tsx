@@ -9,10 +9,10 @@ import { elapsedLabel, formatTokens, formatUsd } from '../../lib/format'
 import { useTicker } from '../../realtime/context'
 import { blockedReason, canSendToTest, columnOf, ROUTE_ICON, routeOf, ticketNumber } from './columns'
 
-const ACTIVE_FLOW = new Set(['running', 'pausing', 'waiting_human', 'waiting_external'])
+export const ACTIVE_FLOW = new Set(['running', 'pausing', 'waiting_human', 'waiting_external'])
 
 /** Elapsed time of the running flow; the label changes once a minute, so the card re-renders as rarely. */
-function ElapsedLabel({ startedAt }: { startedAt: string }) {
+export function ElapsedLabel({ startedAt }: { startedAt: string }) {
   const label = useTicker((now) => elapsedLabel(startedAt, null, now))
   return <span>{label}</span>
 }
@@ -53,7 +53,7 @@ function TurnsChip({ ticket }: { ticket: Ticket }) {
   return label ? <span>{label}</span> : null
 }
 
-function CardActions({ ticket, queue }: CardProps) {
+export function CardActions({ ticket, queue }: CardProps) {
   const column = columnOf(ticket)
   const flow = ticket.flowSummary ?? null
   const flowActive = flow !== null && ACTIVE_FLOW.has(flow.status)
