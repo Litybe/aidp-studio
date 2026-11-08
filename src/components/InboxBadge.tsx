@@ -7,7 +7,7 @@ export const InboxBadge = memo(function InboxBadge() {
   if (count === 0) return null
   return (
     <span
-      className="min-w-5 rounded-full bg-sky-600 px-1.5 text-center text-xs font-semibold text-white tabular-nums"
+      className="min-w-5 rounded-full bg-accent px-1.5 text-center text-xs font-semibold text-slate-950 tabular-nums"
       aria-label={`${count} en attente`}
     >
       {count}

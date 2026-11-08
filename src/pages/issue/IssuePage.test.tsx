@@ -89,6 +89,9 @@ describe('IssuePage', () => {
     expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('Dash en l’air')
     expect(await screen.findByText(/PR #40/)).toBeInTheDocument()
     expect(await screen.findByText(/2,50/)).toBeInTheDocument()
+    // The job holding the current step is open first; the others open from the job list.
+    expect(screen.getByRole('region', { name: 'Phase merge' })).toBeInTheDocument()
+    fireEvent.click(within(screen.getByRole('complementary')).getByRole('button', { name: /realisation/ }))
     const phase = screen.getByRole('region', { name: 'Phase realisation' })
     expect(within(phase).getByText('implement')).toBeInTheDocument()
     expect(within(phase).getByText('itération 2')).toBeInTheDocument()

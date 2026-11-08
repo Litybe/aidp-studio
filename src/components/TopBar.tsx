@@ -14,7 +14,7 @@ export function TopBar() {
   const onBoard = useRouterState({ select: (state) => state.location.pathname === '/board' })
   const hideNewRun = mobile && onBoard
   return (
-    <header className="flex min-h-11 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-slate-800 bg-slate-900 px-3 py-1 md:gap-5 md:px-4">
+    <header className="flex min-h-11 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-surface px-3 py-1 md:gap-5 md:px-4">
       <span className="hidden font-semibold tracking-wide text-slate-100 md:inline">aidp-studio</span>
       <ProjectSelector />
       <DaemonIndicator />

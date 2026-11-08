@@ -3,6 +3,39 @@
 /* System font only: no webfont download, no layout shift. */
 @theme {
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', Consolas, Menlo, monospace;
+
+  /* Neutral scale. The whole app already speaks `slate-*`, so the dark theme is defined here once:
+     950 page, 900 surface, 800 raised / hover, 700 border; 500 and up is AA text on 950 and 900. */
+  --color-slate-50: #f0f6fc;
+  --color-slate-100: #e6edf3;
+  --color-slate-200: #d0d7de;
+  --color-slate-300: #b1bac4;
+  --color-slate-400: #9198a1;
+  --color-slate-500: #7d8590;
+  --color-slate-600: #484f58;
+  --color-slate-700: #30363d;
+  --color-slate-800: #21262d;
+  --color-slate-900: #151b23;
+  --color-slate-950: #0d1117;
+
+  /* Semantic tokens: surfaces, borders, text. */
+  --color-bg: #0d1117;
+  --color-surface: #151b23;
+  --color-surface-2: #1c232c;
+  --color-line: #30363d;
+  --color-line-soft: #21262d;
+  --color-fg: #e6edf3;
+  --color-fg-muted: #9198a1;
+  --color-accent: #4493f8;
+
+  /* One colour per status (the ones of StatusIcon). */
+  --color-st-success: #3fb950;
+  --color-st-failure: #f85149;
+  --color-st-running: #d29922;
+  --color-st-pending: #8b949e;
+  --color-st-skipped: #6e7681;
+  --color-st-human: #a371f7;
 }
 
 html {
@@ -12,6 +45,11 @@ html {
 body {
   margin: 0;
   font-family: var(--font-sans);
+  font-size: 14px;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  /* Fixed-width digits: durations and counters do not jitter. */
+  font-variant-numeric: tabular-nums;
 }
 
 /* Short transitions on interaction only; none when the user asks for reduced motion. */
@@ -25,7 +63,7 @@ body {
   }
 }
 
-/* Phone: no horizontal page scroll; touch targets of at least 44 px (no hover needed anywhere). */
+/* Phone: no horizontal page scroll; touch targets of at least 40 px (no hover needed anywhere). */
 html,
 body {
   overflow-x: hidden;
@@ -36,6 +74,6 @@ body {
   select,
   input:not([type='checkbox']):not([type='radio']),
   [role='tab'] {
-    min-height: 44px;
+    min-height: 40px;
   }
 }

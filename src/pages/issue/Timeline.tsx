@@ -1,75 +1,219 @@
-import { memo } from 'react'
-import { type DotTone, StatusDot } from '../../components/StatusDot'
-import { elapsedLabel, formatTokens } from '../../lib/format'
-import { useTicker } from '../../realtime/context'
-import type { TimelinePhase, TimelineStep } from './flowTimeline'
+import { memo, useCallback, useMemo, useState } from 'react'
+import type { FlowRun } from '../../api/types'
+import { StatusIcon } from '../../components/StatusIcon'
+import { formatDateTime } from '../../lib/format'
+import { useIsMobile } from '../../lib/media'
+import { FLOW_LABEL, flowIconStatus, ICON_LABEL } from '../../lib/status'
+import { buildJobs, defaultJob, type Job } from './flowJobs'
+import { GateActions } from './IssueActions'
+import { Duration, StepList } from './StepList'
 
-const TONE: Record<string, DotTone> = {
-  done: 'ok',
-  skipped: 'muted',
-  pending: 'muted',
-  running: 'warn',
-  waiting_human: 'warn',
-  waiting_external: 'warn',
-  failed: 'danger',
-  escalated: 'danger',
-}
+const CONNECTOR_COLOR: Record<string, string> = { success: 'var(--color-st-success)', failure: 'var(--color-st-failure)' }
 
-const LABEL: Record<string, string> = {
-  pending: 'à venir',
-  running: 'en cours',
-  waiting_human: 'attend une décision',
-  waiting_external: 'attend un hôte',
-  done: 'fait',
-  skipped: 'passée',
-  failed: 'échec',
-  escalated: 'escaladée',
-}
-
-function Duration({ step }: { step: TimelineStep }) {
-  const running = step.status === 'running'
-  const live = useTicker((now) => (running ? elapsedLabel(step.state?.started_at, null, now) : ''))
-  return <span>{running ? live : elapsedLabel(step.state?.started_at, step.state?.finished_at, 0)}</span>
-}
-
-const Row = memo(function Row({ step, current }: { step: TimelineStep; current: boolean }) {
+/** Static line + arrowhead between two job boxes; green once the job before it succeeded. */
+function Connector({ from }: { from: Job }) {
+  const color = CONNECTOR_COLOR[from.status] ?? 'var(--color-line)'
   return (
-    <li
-      className={`flex flex-wrap items-center gap-x-3 px-2 py-1 text-sm ${current ? 'rounded bg-slate-800/70' : ''}`}
-      aria-current={current ? 'step' : undefined}
-    >
-      <StatusDot tone={TONE[step.status] ?? 'muted'} />
-      <span className="font-mono text-slate-100">{step.id}</span>
-      <span className="text-xs text-slate-400">{LABEL[step.status] ?? step.status}</span>
-      {step.iteration > 1 ? <span className="text-xs text-slate-500">itération {step.iteration}</span> : null}
-      <span className="ml-auto flex gap-3 text-xs text-slate-500">
-        {step.tokens !== null ? <span>{formatTokens(step.tokens)}</span> : null}
-        <Duration step={step} />
-      </span>
-      {step.state?.reason ? <span className="w-full pl-5 text-xs text-amber-400">{step.state.reason}</span> : null}
-    </li>
+    <svg width="36" height="12" viewBox="0 0 36 12" aria-hidden="true" className="shrink-0">
+      <line x1="0" y1="6" x2="30" y2="6" stroke={color} strokeWidth="2" />
+      <path d="M26 2l6 4-6 4" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   )
-})
+}
 
-export const Timeline = memo(function Timeline({
-  phases,
-  current,
-}: {
-  phases: readonly TimelinePhase[]
-  current: string | null
-}) {
+function JobBox({ job, selected, onSelect }: { job: Job; selected: boolean; onSelect: (id: string) => void }) {
   return (
-    <div className="space-y-3">
-      {phases.map((phase) => (
-        <section key={phase.phase} aria-label={`Phase ${phase.phase}`}>
-          <h3 className="px-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{phase.phase}</h3>
-          <ul>
-            {phase.steps.map((step) => (
-              <Row key={step.id} step={step} current={step.id === current} />
-            ))}
-          </ul>
-        </section>
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={() => onSelect(job.id)}
+      className={`flex w-44 shrink-0 flex-col gap-1 rounded-md border px-3 py-2 text-left ${selected ? 'border-accent bg-surface-2' : 'border-line bg-surface hover:bg-surface-2'}`}
+    >
+      <span className="flex items-center gap-2">
+        <StatusIcon status={job.status} />
+        <span className="min-w-0 truncate font-medium text-slate-100">{job.phase}</span>
+      </span>
+      <span className="flex items-center justify-between text-xs text-slate-400">
+        <span>{ICON_LABEL[job.status]}</span>
+        <Duration start={job.startedAt} end={job.endedAt} />
+      </span>
+    </button>
+  )
+}
+
+/** Desktop: the jobs left to right, linked by static SVG lines. Scrolls inside its own box when long. */
+function JobGraph({ jobs, selected, onSelect }: { jobs: readonly Job[]; selected: string | null; onSelect: (id: string) => void }) {
+  return (
+    <ol className="flex items-center overflow-x-auto rounded-md border border-line bg-bg p-4" aria-label="Graphe des jobs">
+      {jobs.map((job, index) => (
+        <li key={job.id} className="flex items-center">
+          {index > 0 ? <Connector from={jobs[index - 1] as Job} /> : null}
+          <JobBox job={job} selected={job.id === selected} onSelect={onSelect} />
+        </li>
       ))}
+    </ol>
+  )
+}
+
+function Summary({ flow, jobs }: { flow: FlowRun; jobs: readonly Job[] }) {
+  const status = flowIconStatus(flow.status)
+  const total = jobs.reduce((sum, job) => sum + job.steps.length, 0)
+  const finished = jobs.reduce((sum, job) => sum + job.finished, 0)
+  return (
+    <div className="space-y-2 px-3 py-2">
+      <p className="flex items-center gap-2 font-medium text-slate-100">
+        <StatusIcon status={status} />
+        {FLOW_LABEL[flow.status] ?? flow.status}
+      </p>
+      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-xs">
+        <dt className="text-slate-500">Flow</dt>
+        <dd className="truncate text-slate-300">{flow.def.id}</dd>
+        <dt className="text-slate-500">Étapes</dt>
+        <dd className="text-slate-300">
+          {finished}/{total}
+        </dd>
+        <dt className="text-slate-500">Durée</dt>
+        <dd className="text-slate-300">
+          <Duration start={flow.started_at} end={flow.ended_at} />
+        </dd>
+        <dt className="text-slate-500">Début</dt>
+        <dd className="text-slate-300">{formatDateTime(flow.started_at)}</dd>
+      </dl>
+    </div>
+  )
+}
+
+function Sidebar({ flow, jobs, selected, onSelect }: { flow: FlowRun; jobs: readonly Job[]; selected: string | null; onSelect: (id: string) => void }) {
+  return (
+    <aside className="w-56 shrink-0 self-start rounded-md border border-line bg-surface" aria-label="Résumé et jobs">
+      <Summary flow={flow} jobs={jobs} />
+      <h3 className="border-t border-line-soft px-3 pt-2 pb-1 text-xs font-semibold tracking-wide text-slate-500 uppercase">Jobs</h3>
+      <ul className="pb-1">
+        {jobs.map((job) => (
+          <li key={job.id}>
+            <button
+              type="button"
+              aria-current={job.id === selected ? 'true' : undefined}
+              onClick={() => onSelect(job.id)}
+              className={`flex min-h-9 w-full items-center gap-2 border-l-2 px-3 py-1 text-left ${job.id === selected ? 'border-accent bg-surface-2 text-slate-50' : 'border-transparent text-slate-300 hover:bg-surface-2'}`}
+            >
+              <StatusIcon status={job.status} />
+              <span className="min-w-0 flex-1 truncate">{job.phase}</span>
+              <span className="text-xs text-slate-400">
+                <Duration start={job.startedAt} end={job.endedAt} />
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )
+}
+
+/** The decision a human step waits for, like a deployment approval: prompt, then the buttons. */
+function GateCard({ flow }: { flow: FlowRun }) {
+  const current = flow.current ?? null
+  if (!current || flow.steps[current]?.status !== 'waiting_human') return null
+  const item = [...(flow.inbox ?? [])].reverse().find((entry) => entry.step === current)
+  return (
+    <div className="space-y-2 rounded-md border border-st-human/60 bg-st-human/10 p-3" role="group" aria-label="Validation requise">
+      <p className="flex items-center gap-2 font-medium text-slate-50">
+        <StatusIcon status="human" />
+        <span>
+          Validation requise : <span className="font-mono">{current}</span>
+        </span>
+      </p>
+      {item?.prompt ? <p className="text-slate-300">{item.prompt}</p> : null}
+      <GateActions flow={flow} />
+    </div>
+  )
+}
+
+interface AccordionProps {
+  flow: FlowRun
+  jobs: readonly Job[]
+  open: ReadonlySet<string>
+  onToggle: (id: string) => void
+  overrides: Readonly<Record<string, boolean>>
+  onStep: (id: string, open: boolean) => void
+}
+
+/** Phone: the jobs as a vertical list joined by a line; a tap opens the steps in place. */
+function JobAccordion({ flow, jobs, open, onToggle, overrides, onStep }: AccordionProps) {
+  return (
+    <ol className="relative" aria-label="Jobs">
+      {jobs.map((job, index) => {
+        const isOpen = open.has(job.id)
+        return (
+          <li key={job.id} className="relative pb-2 pl-8">
+            {index < jobs.length - 1 ? <span aria-hidden="true" className="absolute top-6 bottom-0 left-[11px] w-0.5 bg-line" /> : null}
+            <span className="absolute top-3 left-0 flex size-6 items-center justify-center rounded-full bg-bg">
+              <StatusIcon status={job.status} size={18} />
+            </span>
+            <button
+              type="button"
+              aria-expanded={isOpen}
+              onClick={() => onToggle(job.id)}
+              className="flex min-h-12 w-full items-center gap-2 rounded-md border border-line bg-surface px-3 text-left"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium text-slate-100">{job.phase}</span>
+                <span className="block text-xs text-slate-400">
+                  {ICON_LABEL[job.status]} · {job.finished}/{job.steps.length}
+                </span>
+              </span>
+              <span className="text-xs text-slate-400">
+                <Duration start={job.startedAt} end={job.endedAt} />
+              </span>
+            </button>
+            {isOpen ? (
+              <div className="mt-1">
+                <StepList job={job} flow={flow} overrides={overrides} onToggle={onStep} />
+              </div>
+            ) : null}
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+/** The flow as a workflow run: summary and jobs on the left, job graph and step list in the middle. */
+export const Timeline = memo(function Timeline({ flow }: { flow: FlowRun }) {
+  const mobile = useIsMobile()
+  const jobs = useMemo(() => buildJobs(flow), [flow])
+  const [picked, setPicked] = useState<string | null>(null)
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({})
+  const [openJobs, setOpenJobs] = useState<ReadonlySet<string> | null>(null)
+  const onStep = useCallback((id: string, open: boolean) => setOverrides((current) => ({ ...current, [id]: open })), [])
+
+  if (jobs.length === 0) return <p className="text-slate-500">Ce flow n'a pas encore d'étapes.</p>
+  const selected = picked && jobs.some((job) => job.id === picked) ? picked : defaultJob(jobs)
+  const job = jobs.find((entry) => entry.id === selected) ?? jobs[0]
+
+  if (mobile) {
+    const open = openJobs ?? new Set(selected ? [selected] : [])
+    const toggle = (id: string) =>
+      setOpenJobs(() => {
+        const next = new Set(open)
+        if (!next.delete(id)) next.add(id)
+        return next
+      })
+    return (
+      <div className="space-y-3">
+        <GateCard flow={flow} />
+        <JobAccordion flow={flow} jobs={jobs} open={open} onToggle={toggle} overrides={overrides} onStep={onStep} />
+      </div>
+    )
+  }
+  return (
+    <div className="flex items-start gap-4">
+      <Sidebar flow={flow} jobs={jobs} selected={selected} onSelect={setPicked} />
+      <div className="min-w-0 flex-1 space-y-3">
+        <GateCard flow={flow} />
+        <JobGraph jobs={jobs} selected={selected} onSelect={setPicked} />
+        {job ? <StepList job={job} flow={flow} overrides={overrides} onToggle={onStep} /> : null}
+      </div>
     </div>
   )
 })
