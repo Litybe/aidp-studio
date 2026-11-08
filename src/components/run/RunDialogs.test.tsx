@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import type { Ticket } from '../../api/types'
 import BoardPage from '../../pages/board/BoardPage'
 import { mockApi, renderPage } from '../../test/harness'
@@ -44,6 +44,18 @@ async function openCardDialog(ticket: Ticket) {
 vi.setConfig({ testTimeout: 15000 })
 
 describe('ticket run dialog', () => {
+  it('groups the game-test-* flows under the Unity test label', async () => {
+    mockApi({
+      ...common,
+      'GET /catalog/flows': { body: [...flows, { id: 'game-test-code' }, { id: 'game-test-art' }] },
+      'GET /tickets': { body: [base] },
+    })
+    const dialog = await openCardDialog(base)
+    const group = await within(dialog).findByRole('group', { name: 'Test Unity (checkout principal, une issue à la fois)' })
+    expect(within(group).getAllByRole('option').map((option) => option.getAttribute('value'))).toEqual(['game-test-code', 'game-test-art'])
+    expect(within(dialog).queryByRole('group', { name: /Test Unity/ })).toBe(group)
+  })
+
   it('preselects the flow of the route and sends the exact body', async () => {
     const calls = mockApi({
       ...common,

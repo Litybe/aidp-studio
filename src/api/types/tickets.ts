@@ -18,6 +18,9 @@ export interface Milestone {
   dueOn: string | null
 }
 
+/** Lane of the ticket (C13): dev worktree, waiting for the Unity test, or under test. */
+export type TicketPhase = 'dev' | 'to-test' | 'testing'
+
 export interface Ticket {
   key: string
   summary: string
@@ -31,6 +34,9 @@ export interface Ticket {
   githubNumber?: number | null
   url?: string | null
   flowSummary?: FlowSummary | null
+  /** C13; absent on a daemon that predates the two lanes. */
+  phase?: TicketPhase | null
+  branch?: string | null
   blocked_reason?: string | null
   blockedReason?: string | null
   updated?: string
@@ -52,13 +58,14 @@ export interface TicketCost {
   testTurns?: number | null
 }
 
-/** The nine columns of the board (PLAN-GAMEDEV §3.1). */
+/** The ten columns of the board (PLAN-GAMEDEV §3.1). */
 export type ColumnId =
   | 'triage'
   | 'ready'
   | 'queued'
   | 'realisation'
   | 'review'
+  | 'to-test'
   | 'test'
   | 'merge'
   | 'blocked'

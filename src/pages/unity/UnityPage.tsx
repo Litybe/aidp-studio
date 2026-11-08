@@ -3,6 +3,7 @@ import { Async } from '../../components/Async'
 import { StatusDot } from '../../components/StatusDot'
 import { formatDateTime, formatDurationMs } from '../../lib/format'
 import type { CompileResult, UnityStatus } from '../../api/types/unity'
+import { TestQueueCard } from './TestQueueCard'
 import { ticketLabel, useReleaseLock, useUnityStatus } from './queries'
 
 const CARD = 'rounded border border-slate-800 bg-slate-900/40 p-4'
@@ -154,6 +155,7 @@ export default function UnityPage() {
           </>
         )}
       </Async>
+      <TestQueueCard />
       <section className={CARD} aria-label="Scénarios et recordings">
         <h2 className={H2}>Scénarios et recordings</h2>
         <p className="text-xs text-slate-500">P7 : bibliothèque de scénarios, non-régression et enregistrement de repro.</p>

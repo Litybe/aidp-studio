@@ -7,7 +7,7 @@ import { ActionButton, FeedbackLine } from '../../components/ActionControls'
 import { LaunchRunButton } from '../../components/run/LaunchButtons'
 import { elapsedLabel, formatTokens, formatUsd } from '../../lib/format'
 import { useTicker } from '../../realtime/context'
-import { blockedReason, columnOf, ROUTE_ICON, routeOf, ticketNumber } from './columns'
+import { blockedReason, canSendToTest, columnOf, ROUTE_ICON, routeOf, ticketNumber } from './columns'
 
 const ACTIVE_FLOW = new Set(['running', 'pausing', 'waiting_human', 'waiting_external'])
 
@@ -61,8 +61,15 @@ function CardActions({ ticket, queue }: CardProps) {
   const post = useApiAction((request: { path: string; body?: unknown }) => apiPost(request.path, request.body))
   const send = (path: string, body?: unknown) => () => post.run(body === undefined ? { path } : { path, body })
 
+  const toTest = useApiAction(() =>
+    apiPost(routes.ticketStatus(ticket.key), { status: ticket.status, phase: 'to-test', reason: 'envoyée en test depuis le front' }),
+  )
+
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1">
+      {canSendToTest(ticket) && !toTest.feedback.soon ? (
+        <ActionButton label="Envoyer en test" tone="primary" onRun={() => toTest.run()} />
+      ) : null}
       {column === 'triage' || column === 'blocked' ? (
         <ActionButton
           label="Rendre prête"
@@ -102,6 +109,7 @@ function CardActions({ ticket, queue }: CardProps) {
         />
       ) : null}
       <FeedbackLine feedback={post.feedback} />
+      <FeedbackLine feedback={toTest.feedback} />
     </div>
   )
 }
