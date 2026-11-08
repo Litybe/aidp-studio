@@ -1,5 +1,5 @@
 import type { Ticket } from '../../api/types'
-import { buildBoard, columnOf, routeOf, ticketNumber } from './columns'
+import { buildBoard, canSendToTest, columnOf, COLUMNS, routeOf, ticketNumber } from './columns'
 
 const t = (over: Partial<Ticket>): Ticket => ({ key: 'GH-1', summary: 'x', status: 'todo', ...over })
 
@@ -16,6 +16,11 @@ describe('columnOf', () => {
     [{ status: 'in-progress', labels: ['aidp:review'] }, 'review'],
     [{ status: 'in-progress', labels: ['aidp:fixing'] }, 'review'],
     [{ status: 'in-progress', labels: ['aidp:testing'] }, 'test'],
+    [{ status: 'in-progress', labels: ['aidp:to-test'] }, 'to-test'],
+    [{ status: 'in-progress', phase: 'to-test' }, 'to-test'],
+    [{ status: 'in-progress', phase: 'testing' }, 'test'],
+    [{ status: 'in-progress', labels: ['aidp:to-test', 'aidp:testing'] }, 'test'],
+    [{ status: 'in-progress', labels: ['aidp:to-test', 'aidp:review'] }, 'to-test'],
     [{ status: 'in-review', labels: ['aidp:awaiting-merge'] }, 'merge'],
     [{ status: 'in-review' }, 'merge'],
     [{ status: 'done', labels: ['aidp:done'] }, 'done'],
@@ -80,5 +85,21 @@ describe('buildBoard', () => {
     expect(buildBoard(tickets, { route: 'art', milestone: '', label: '' }).ready.map((x) => x.key)).toEqual(['GH-2'])
     expect(buildBoard(tickets, { route: '', milestone: 'M1', label: '' }).ready.map((x) => x.key)).toEqual(['GH-1'])
     expect(buildBoard(tickets, { route: '', milestone: '', label: 'feature' }).ready.map((x) => x.key)).toEqual(['GH-1'])
+  })
+})
+
+describe('test lane', () => {
+  it('places « À tester » between Revue and Test Unity', () => {
+    const ids = COLUMNS.map((column) => column.id)
+    expect(ids.indexOf('to-test')).toBe(ids.indexOf('review') + 1)
+    expect(ids.indexOf('test')).toBe(ids.indexOf('to-test') + 1)
+  })
+
+  it('offers « Envoyer en test » only on a finished review', () => {
+    const flow = (status: string) => ({ flowKey: 'GH-1', status, phase: 'review', stepId: null, iteration: 1, startedAt: null })
+    const review = { status: 'in-progress', labels: ['aidp:review'] }
+    expect(canSendToTest(t({ ...review, flowSummary: flow('done') }))).toBe(true)
+    expect(canSendToTest(t({ ...review, flowSummary: flow('running') }))).toBe(false)
+    expect(canSendToTest(t({ status: 'in-progress', labels: ['aidp:to-test'], flowSummary: flow('done') }))).toBe(false)
   })
 })

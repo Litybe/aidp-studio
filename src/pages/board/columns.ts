@@ -5,13 +5,14 @@ export interface ColumnDef {
   label: string
 }
 
-/** The nine states of PLAN-GAMEDEV §3.1, left to right. */
+/** The ten states of PLAN-GAMEDEV §3.1 and C13, left to right. */
 export const COLUMNS: readonly ColumnDef[] = [
   { id: 'triage', label: 'Triage' },
   { id: 'ready', label: 'Prêtes' },
   { id: 'queued', label: 'En file' },
   { id: 'realisation', label: 'Réalisation' },
   { id: 'review', label: 'Revue' },
+  { id: 'to-test', label: 'À tester' },
   { id: 'test', label: 'Test Unity' },
   { id: 'merge', label: 'À merger' },
   { id: 'blocked', label: 'Bloquées' },
@@ -49,7 +50,9 @@ export function columnOf(ticket: Ticket): ColumnId | null {
   if (labels.has('aidp:awaiting-merge') || status === 'in-review' || (flow?.status === 'waiting_human' && /merge/i.test(step))) {
     return 'merge'
   }
-  if (labels.has('aidp:testing') || /test|unity|playtest/i.test(phase)) return 'test'
+  if (labels.has('aidp:testing') || ticket.phase === 'testing') return 'test'
+  if (labels.has('aidp:to-test') || ticket.phase === 'to-test') return 'to-test'
+  if (/test|unity|playtest/i.test(phase)) return 'test'
   if (labels.has('aidp:review') || labels.has('aidp:fixing') || /review|revue|fix/i.test(phase)) return 'review'
   if (labels.has('aidp:in-progress') || status === 'in-progress') return 'realisation'
   if (labels.has('aidp:queued') || status === 'queued') return 'queued'
@@ -120,4 +123,11 @@ export function filterOptions(tickets: readonly Ticket[]): { milestones: string[
     for (const label of ticket.labels ?? []) labels.add(label)
   }
   return { milestones: [...milestones].sort(), labels: [...labels].sort() }
+}
+
+/** A review that is over: the dev flow has ended and the ticket is still in the review column. */
+export function canSendToTest(ticket: Ticket): boolean {
+  if (columnOf(ticket) !== 'review') return false
+  const status = ticket.flowSummary?.status
+  return status === 'done' || status === 'completed'
 }
