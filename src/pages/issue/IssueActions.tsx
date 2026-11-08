@@ -93,7 +93,7 @@ export function IssueActions({ flow }: { flow: FlowRun }) {
         <FeedbackLine feedback={post.feedback} />
       </div>
       <details className="text-xs text-slate-400">
-        <summary className="inline-block min-h-6 cursor-pointer select-none">Lancement manuel</summary>
+        <summary className="inline-block min-h-10 cursor-pointer py-2 select-none">Lancement manuel</summary>
         <div className="mt-1">
           <ManualForm flowKey={flow.key} />
         </div>

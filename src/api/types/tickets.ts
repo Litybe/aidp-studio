@@ -88,4 +88,7 @@ export interface TicketPr {
   additions?: number
   deletions?: number
   changedFiles?: number
+  /** `owner/name` of the repository and the tip of the PR branch (what the merge decision looks at). */
+  repo?: string
+  head?: { ref?: string; sha?: string }
 }

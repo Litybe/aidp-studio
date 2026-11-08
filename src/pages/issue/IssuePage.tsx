@@ -13,7 +13,9 @@ import { costLabel } from '../board/TicketCard'
 import { IssueActions } from './IssueActions'
 import { ArtifactsTab, AssumptionsTab, JournalTab, ProofsTab } from './tabs'
 import { Duration } from './StepList'
-import { Timeline } from './Timeline'
+import { GateCard, Timeline } from './Timeline'
+import { columnOf } from '../board/columns'
+import { isMergePending, MergeOverview } from './merge/MergeOverview'
 import { runIdsOf } from './flowTimeline'
 
 const ACTIVE_FLOW = new Set(['running', 'pausing', 'waiting_human', 'waiting_external'])
@@ -69,7 +71,7 @@ function Header({
         {prNumber !== undefined ? (
           <span>
             {prUrl ? (
-              <a href={prUrl} target="_blank" rel="noreferrer noopener" className="text-accent hover:underline">
+              <a href={prUrl} target="_blank" rel="noreferrer noopener" className="-my-3 inline-block py-3 text-accent hover:underline">
                 PR #{prNumber}
               </a>
             ) : (
@@ -87,11 +89,39 @@ function Header({
   )
 }
 
+function FlowDetails({ flow, runIds, showGate }: { flow: FlowRun; runIds: readonly string[]; showGate: boolean }) {
+  const [tab, setTab] = useState<TabId>('artifacts')
+  return (
+    <>
+      <Timeline key={flow.key} flow={flow} showGate={showGate} />
+      <div>
+        <div role="tablist" className="mb-2 flex gap-1 overflow-x-auto border-b border-slate-800">
+          {TABS.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === entry.id}
+              className={`px-3 py-1 text-sm ${tab === entry.id ? 'border-b-2 border-sky-500 text-slate-100' : 'text-slate-400 hover:text-slate-200'}`}
+              onClick={() => setTab(entry.id)}
+            >
+              {entry.label}
+            </button>
+          ))}
+        </div>
+        {tab === 'artifacts' ? <ArtifactsTab runIds={runIds} /> : null}
+        {tab === 'proofs' ? <ProofsTab runIds={runIds} /> : null}
+        {tab === 'assumptions' ? <AssumptionsTab runIds={runIds} /> : null}
+        {tab === 'journal' ? <JournalTab flowKey={flow.key} /> : null}
+      </div>
+    </>
+  )
+}
+
 export default function IssuePage() {
   const { key = '' } = useParams({ strict: false })
   const ticket = useTicket(key)
   const flow = useFlow(key)
-  const [tab, setTab] = useState<TabId>('artifacts')
   const flowData = flow.data
   const runIds = useMemo(() => runIdsOf(flowData), [flowData])
 
@@ -114,34 +144,25 @@ export default function IssuePage() {
           <p className="text-sm text-red-400">Flow illisible : {flow.error.message}</p>
         )
       ) : null}
-      {flowData ? (
+      {flowData && (isMergePending(flowData) || columnOf(ticket.data.ticket) === 'merge') ? (
         <>
-          <Timeline key={flowData.key} flow={flowData} />
-          <div>
-            <div role="tablist" className="mb-2 flex gap-1 overflow-x-auto border-b border-slate-800">
-              {TABS.map((entry) => (
-                <button
-                  key={entry.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={tab === entry.id}
-                  className={`px-3 py-1 text-sm ${tab === entry.id ? 'border-b-2 border-sky-500 text-slate-100' : 'text-slate-400 hover:text-slate-200'}`}
-                  onClick={() => setTab(entry.id)}
-                >
-                  {entry.label}
-                </button>
-              ))}
+          <GateCard flow={flowData} />
+          <MergeOverview ticket={ticket.data.ticket} flow={flowData} body={ticket.data.body} />
+          <details className="rounded-md border border-line">
+            <summary className="min-h-10 cursor-pointer px-3 py-2 text-sm text-slate-300 select-none">
+              Déroulé du flow, artefacts et journal
+            </summary>
+            <div className="p-3">
+              <FlowDetails flow={flowData} runIds={runIds} showGate={false} />
             </div>
-            {tab === 'artifacts' ? <ArtifactsTab runIds={runIds} /> : null}
-            {tab === 'proofs' ? <ProofsTab runIds={runIds} /> : null}
-            {tab === 'assumptions' ? <AssumptionsTab runIds={runIds} /> : null}
-            {tab === 'journal' ? <JournalTab flowKey={flowData.key} /> : null}
-          </div>
+          </details>
         </>
+      ) : flowData ? (
+        <FlowDetails flow={flowData} runIds={runIds} showGate />
       ) : null}
       {ticket.data.body ? (
         <details className="text-sm text-slate-400">
-          <summary className="cursor-pointer text-slate-300">Description de l'issue</summary>
+          <summary className="min-h-10 cursor-pointer py-2 text-slate-300">Description de l'issue</summary>
           <pre className="mt-2 whitespace-pre-wrap text-xs">{ticket.data.body}</pre>
         </details>
       ) : null}
