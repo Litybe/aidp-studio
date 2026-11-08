@@ -31,12 +31,19 @@ function tokensOf(state: StepState | undefined): number | null {
   return typeof value === 'number' ? value : null
 }
 
-/** Steps of the frozen definition grouped by phase, in definition order. */
+/** Phase of the first member of a container step (a loop has none of its own). */
+function memberPhase(def: StepDef): string | null | undefined {
+  return flatten(def.body ?? []).find((member) => member.phase)?.phase
+}
+
+/** Steps of the frozen definition grouped by phase, in definition order. A step without a phase joins its previous step's. */
 export function buildTimeline(flow: FlowRun): TimelinePhase[] {
   const phases: TimelinePhase[] = []
+  let previous: string = NO_PHASE
   for (const def of flatten(flow.def.steps)) {
     const state = flow.steps[def.id]
-    const phase = def.phase ?? state?.phase ?? NO_PHASE
+    const phase = def.phase ?? state?.phase ?? memberPhase(def) ?? previous
+    previous = phase
     let group = phases.find((entry) => entry.phase === phase)
     if (!group) {
       group = { phase, steps: [] }

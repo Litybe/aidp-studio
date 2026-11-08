@@ -1,6 +1,6 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { memo, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { apiPost, routes, useApiAction } from '../../api/actions'
 import { useQueue, useTickets } from '../../api/f1queries'
 import type { QueueEntry, Ticket, TicketRoute } from '../../api/types'
@@ -12,6 +12,7 @@ import {
   buildBoard,
   columnOf,
   defaultState,
+  displayTitle,
   filterOptions,
   groupByState,
   isStateId,
@@ -83,7 +84,7 @@ const MobileCard = memo(function MobileCard({ ticket, onMenu }: { ticket: Ticket
         <StatusIcon status={ticketIconStatus(ticket)} size={18} />
         <span className="flex min-w-0 flex-1 flex-col justify-center">
           <span className="truncate text-slate-100">
-            <span className="font-mono text-xs text-slate-400">{ticketNumber(ticket)}</span> {ticket.summary}
+            <span className="font-mono text-xs text-slate-400">{ticketNumber(ticket)}</span> {displayTitle(ticket.summary)}
           </span>
           <span className="flex items-center gap-x-2 overflow-hidden text-xs whitespace-nowrap text-slate-500">
             <span>{route.label}</span>
@@ -237,6 +238,11 @@ export default function BoardMobile() {
   const filterCount = activeFilterCount(filters) + (filters.route ? 1 : 0)
   const list = grouped[active]
   const shown = STATES.filter((state) => state.id === active || grouped[state.id].length > 0)
+  // The strip scrolls sideways: the state on screen must stay visible in it.
+  const activePill = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    activePill.current?.scrollIntoView?.({ block: 'nearest', inline: 'center' })
+  }, [active])
 
   return (
     <section className="flex h-full flex-col gap-2">
@@ -246,6 +252,7 @@ export default function BoardMobile() {
           {shown.map((state) => (
             <button
               key={state.id}
+              ref={state.id === active ? activePill : undefined}
               type="button"
               aria-pressed={state.id === active}
               className={`${PILL} ${state.id === active ? PILL_ON : PILL_OFF}`}

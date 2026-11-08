@@ -39,6 +39,42 @@ describe('buildJobs', () => {
     expect(build?.finished).toBe(1)
   })
 
+  it('stops the clock of a job nothing runs in at its last finished step', () => {
+    const stopped: FlowRun = {
+      ...flow,
+      def: { id: 'dev', version: 1, steps: [{ id: 'a', phase: 'merge' }, { id: 'b', phase: 'merge' }, { id: 'c', phase: 'merge' }] },
+      current: null,
+      steps: {
+        a: { status: 'done', started_at: '2026-11-08T10:00:00Z', finished_at: '2026-11-08T10:01:00Z' },
+        b: { status: 'failed', started_at: '2026-11-08T10:01:00Z', finished_at: '2026-11-08T10:02:00Z' },
+      },
+    }
+    expect(buildJobs(stopped)[0]?.endedAt).toBe('2026-11-08T10:02:00Z')
+  })
+
+  it('files a step without a phase under its previous step, and a loop under its members', () => {
+    const mixed: FlowRun = {
+      ...flow,
+      def: {
+        id: 'dev',
+        version: 1,
+        steps: [
+          { id: 'setup', phase: 'prepare' },
+          { id: 'loop', kind: 'loop', body: [{ id: 'test', phase: 'test' }] },
+          { id: 'label' },
+          { id: 'merge', phase: 'merge' },
+        ],
+      },
+      current: null,
+      steps: {},
+    }
+    expect(buildJobs(mixed).map((job) => [job.phase, job.steps.map((step) => step.id)])).toEqual([
+      ['prepare', ['setup']],
+      ['test', ['loop', 'test', 'label']],
+      ['merge', ['merge']],
+    ])
+  })
+
   it('opens the job holding the current step first', () => {
     expect(defaultJob(buildJobs(flow))).toBe('build')
     expect(defaultJob([])).toBeNull()

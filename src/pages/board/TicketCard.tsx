@@ -8,7 +8,7 @@ import { StatusIcon } from '../../components/StatusIcon'
 import { LaunchRunButton } from '../../components/run/LaunchButtons'
 import { elapsedLabel, formatTokens, formatUsd } from '../../lib/format'
 import { useTicker } from '../../realtime/context'
-import { blockedReason, canSendToTest, columnOf, ROUTE_ICON, routeOf, ticketNumber } from './columns'
+import { blockedReason, canSendToTest, columnOf, displayTitle, ROUTE_ICON, routeOf, ticketNumber } from './columns'
 import { ticketIconStatus } from './ticketStatus'
 
 export const ACTIVE_FLOW = new Set(['running', 'pausing', 'waiting_human', 'waiting_external'])
@@ -133,7 +133,7 @@ export const TicketCard = memo(function TicketCard({ ticket, queue }: CardProps)
           className="min-w-0 flex-1 truncate text-slate-100 hover:text-accent"
           title={ticket.summary}
         >
-          <span className="font-mono text-xs text-slate-400">{ticketNumber(ticket)}</span> {ticket.summary}
+          <span className="font-mono text-xs text-slate-400">{ticketNumber(ticket)}</span> {displayTitle(ticket.summary)}
         </Link>
         <button
           type="button"

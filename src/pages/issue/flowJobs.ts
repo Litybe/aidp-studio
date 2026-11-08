@@ -54,14 +54,17 @@ export function buildJobs(flow: FlowRun): Job[] {
     const started = steps.map((step) => step.state?.started_at).filter((value): value is string => Boolean(value))
     const ended = steps.map((step) => step.state?.finished_at).filter((value): value is string => Boolean(value))
     const finished = steps.filter((step) => step.status === 'done' || step.status === 'skipped').length
-    const allEnded = steps.length > 0 && finished === steps.length
+    // A job nothing runs in has stopped, even with steps left: its clock ends at its last finished step.
+    const open = steps.some(
+      (step) => step.status === 'running' || step.status === 'waiting_external' || step.status === 'waiting_human',
+    )
     return {
       id: phase.phase,
       phase: phase.phase,
       steps,
       status: jobStatus(steps, current),
       startedAt: started.length > 0 ? started.reduce((a, b) => (Date.parse(a) <= Date.parse(b) ? a : b)) : null,
-      endedAt: allEnded && ended.length > 0 ? ended.reduce((a, b) => (Date.parse(a) >= Date.parse(b) ? a : b)) : null,
+      endedAt: !open && ended.length > 0 ? ended.reduce((a, b) => (Date.parse(a) >= Date.parse(b) ? a : b)) : null,
       finished,
       hasCurrent: steps.some((step) => step.id === current),
     }

@@ -88,6 +88,13 @@ export function ticketNumber(ticket: Ticket): string {
   return digits ? `#${digits[1]}` : ticket.key
 }
 
+const COMMIT_PREFIX = /^(feat|fix|chore|docs|refactor|test|style|perf|build)(\([^)]*\))?!?:\s*/i
+
+/** Title of a card without its `feat(art): ` prefix: the card already shows the route, and the room is scarce. */
+export function displayTitle(summary: string): string {
+  return summary.replace(COMMIT_PREFIX, '') || summary
+}
+
 export interface Filters {
   route: TicketRoute | ''
   milestone: string
