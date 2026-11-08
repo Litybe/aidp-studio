@@ -4,10 +4,12 @@ import { apiPost, routes, useApiAction } from '../../api/actions'
 import { useTicketCost } from '../../api/f1queries'
 import type { QueueEntry, Ticket, TicketCost } from '../../api/types'
 import { ActionButton, FeedbackLine } from '../../components/ActionControls'
+import { StatusIcon } from '../../components/StatusIcon'
 import { LaunchRunButton } from '../../components/run/LaunchButtons'
 import { elapsedLabel, formatTokens, formatUsd } from '../../lib/format'
 import { useTicker } from '../../realtime/context'
-import { blockedReason, canSendToTest, columnOf, ROUTE_ICON, routeOf, ticketNumber } from './columns'
+import { blockedReason, canSendToTest, columnOf, displayTitle, ROUTE_ICON, routeOf, ticketNumber } from './columns'
+import { ticketIconStatus } from './ticketStatus'
 
 export const ACTIVE_FLOW = new Set(['running', 'pausing', 'waiting_human', 'waiting_external'])
 
@@ -119,23 +121,23 @@ export const TicketCard = memo(function TicketCard({ ticket, queue }: CardProps)
   const route = ROUTE_ICON[routeOf(ticket)]
   const flow = ticket.flowSummary ?? null
   const reason = columnOf(ticket) === 'blocked' ? blockedReason(ticket) : null
-  const step = flow?.stepId ?? flow?.phase ?? null
+  const step = flow?.stepId ?? null
+  const phase = flow?.phase && flow.phase !== step ? flow.phase : null
   return (
-    <article className="rounded border border-slate-800 bg-slate-900 p-2" data-testid={`card-${ticket.key}`}>
-      <header className="flex items-start gap-2">
-        <span className="font-mono text-xs text-slate-500" title={route.label} aria-label={`Route ${route.label}`}>
-          {route.icon}
-        </span>
+    <article className="rounded-md border border-line bg-surface px-2 py-1.5 hover:bg-surface-2" data-testid={`card-${ticket.key}`}>
+      <header className="flex items-center gap-1.5">
+        <StatusIcon status={ticketIconStatus(ticket)} />
         <Link
           to="/issue/$key"
           params={{ key: ticket.key }}
-          className="min-w-0 flex-1 text-slate-100 hover:text-sky-300"
+          className="min-w-0 flex-1 truncate text-slate-100 hover:text-accent"
+          title={ticket.summary}
         >
-          <span className="font-mono text-xs text-slate-400">{ticketNumber(ticket)}</span> {ticket.summary}
+          <span className="font-mono text-xs text-slate-400">{ticketNumber(ticket)}</span> {displayTitle(ticket.summary)}
         </Link>
         <button
           type="button"
-          className="text-xs text-slate-500 hover:text-slate-200"
+          className="rounded px-1.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-200"
           aria-expanded={open}
           aria-label={`Actions ${ticketNumber(ticket)}`}
           onClick={() => setOpen((value) => !value)}
@@ -143,13 +145,17 @@ export const TicketCard = memo(function TicketCard({ ticket, queue }: CardProps)
           ⋯
         </button>
       </header>
-      <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
-        {ticket.milestone ? <span>{ticket.milestone.title}</span> : null}
+      <p className="mt-0.5 flex items-center gap-x-2 overflow-hidden pl-[22px] text-xs whitespace-nowrap text-slate-500">
+        <span className="font-mono" title={route.label} aria-label={`Route ${route.label}`}>
+          {route.icon}
+        </span>
+        {phase ? <span>{phase}</span> : null}
         {step ? <span className="text-slate-300">{step}</span> : null}
         {flow?.startedAt && ACTIVE_FLOW.has(flow.status) ? <ElapsedLabel startedAt={flow.startedAt} /> : null}
         <CostChip ticketKey={ticket.key} />
         <TurnsChip ticket={ticket} />
-        {reason ? <span className="text-amber-400">{reason}</span> : null}
+        {reason ? <span className="truncate text-st-running">{reason}</span> : null}
+        {ticket.milestone ? <span className="min-w-0 truncate">{ticket.milestone.title}</span> : null}
       </p>
       {open ? <CardActions ticket={ticket} queue={queue} /> : null}
     </article>

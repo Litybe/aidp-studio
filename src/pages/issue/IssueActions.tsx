@@ -46,7 +46,27 @@ function ManualForm({ flowKey }: { flowKey: string }) {
   )
 }
 
-/** Flow-level actions: gate decision, retry/skip of a step, pause/resume, manual launch. */
+/** The gate decision (approve / reject), shown on the highlighted human step of the flow page. */
+export function GateActions({ flow }: { flow: FlowRun }) {
+  const post = useApiAction((path: string) => apiPost(path))
+  const current = flow.current ?? null
+  if (!current || flow.steps[current]?.status !== 'waiting_human') return null
+  const run = (path: string) => () => post.run(path)
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <ActionButton label="Approuver" tone="primary" onRun={run(routes.step(flow.key, current, 'approve'))} />
+      <ActionButton
+        label="Rejeter"
+        tone="danger"
+        confirm={`Rejeter ${current} ? Le flow s'arrête.`}
+        onRun={run(routes.step(flow.key, current, 'reject'))}
+      />
+      <FeedbackLine feedback={post.feedback} />
+    </div>
+  )
+}
+
+/** Flow-level actions: retry/skip of a step, pause/resume, manual launch (the gate has its own buttons). */
 export function IssueActions({ flow }: { flow: FlowRun }) {
   const post = useApiAction((path: string) => apiPost(path))
   const current = flow.current ?? null
@@ -58,17 +78,6 @@ export function IssueActions({ flow }: { flow: FlowRun }) {
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        {current && status === 'waiting_human' ? (
-          <>
-            <ActionButton label="Approuver" tone="primary" onRun={run(routes.step(flow.key, current, 'approve'))} />
-            <ActionButton
-              label="Rejeter"
-              tone="danger"
-              confirm={`Rejeter ${current} ? Le flow s'arrête.`}
-              onRun={run(routes.step(flow.key, current, 'reject'))}
-            />
-          </>
-        ) : null}
         {retryId ? <ActionButton label="Relancer l'étape" tone="primary" onRun={run(routes.step(flow.key, retryId, 'retry'))} /> : null}
         {current && ACTIVE.has(flow.status) ? (
           <ActionButton
@@ -83,7 +92,12 @@ export function IssueActions({ flow }: { flow: FlowRun }) {
         ) : null}
         <FeedbackLine feedback={post.feedback} />
       </div>
-      <ManualForm flowKey={flow.key} />
+      <details className="text-xs text-slate-400">
+        <summary className="inline-block min-h-6 cursor-pointer select-none">Lancement manuel</summary>
+        <div className="mt-1">
+          <ManualForm flowKey={flow.key} />
+        </div>
+      </details>
     </div>
   )
 }

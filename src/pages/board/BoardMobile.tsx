@@ -1,16 +1,18 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { memo, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { apiPost, routes, useApiAction } from '../../api/actions'
 import { useQueue, useTickets } from '../../api/f1queries'
 import type { QueueEntry, Ticket, TicketRoute } from '../../api/types'
 import { BottomSheet } from '../../components/BottomSheet'
+import { StatusIcon } from '../../components/StatusIcon'
 import {
   activeFilterCount,
   blockedReason,
   buildBoard,
   columnOf,
   defaultState,
+  displayTitle,
   filterOptions,
   groupByState,
   isStateId,
@@ -23,18 +25,18 @@ import {
   ticketNumber,
 } from './columns'
 import { VIRTUALIZE_ABOVE } from './Column'
+import { ticketIconStatus } from './ticketStatus'
 import { ACTIVE_FLOW, CardActions, ElapsedLabel } from './TicketCard'
 import { Toolbar } from './Toolbar'
 
 const NO_QUEUE: never[] = []
-const CARD_PX = 60
-const ROW_ESTIMATE_PX = CARD_PX + 8
+const ROW_ESTIMATE_PX = 52
 const OVERSCAN = 8
-const PILL = 'inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-3 text-sm whitespace-nowrap'
-const PILL_OFF = 'border-slate-700 text-slate-300'
-const PILL_ON = 'border-sky-600 bg-sky-900/50 text-sky-100'
+const PILL = 'inline-flex min-h-10 shrink-0 items-center gap-1 rounded-full border px-3 text-sm whitespace-nowrap'
+const PILL_OFF = 'border-line text-slate-300'
+const PILL_ON = 'border-accent bg-accent/15 text-slate-50'
 const ROUTES: readonly (TicketRoute | '')[] = ['', 'code', 'art', 'map', 'doc']
-const TOUCH = 'inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded px-3 text-sm'
+const TOUCH = 'inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded px-2 text-sm'
 const PRIMARY = `${TOUCH} border border-sky-700 bg-sky-900/40 text-sky-200`
 
 /** Primary action of a state, shown on the card: Merger (two taps), or Remettre prête when blocked. */
@@ -77,19 +79,19 @@ const MobileCard = memo(function MobileCard({ ticket, onMenu }: { ticket: Ticket
   const reason = columnOf(ticket) === 'blocked' ? blockedReason(ticket) : null
   const step = flow?.stepId ?? flow?.phase ?? null
   return (
-    <article
-      className="flex h-15 items-center rounded border border-slate-800 bg-slate-900 pl-3"
-      data-testid={`card-${ticket.key}`}
-    >
-      <Link to="/issue/$key" params={{ key: ticket.key }} className="flex min-h-11 min-w-0 flex-1 flex-col justify-center">
-        <span className="truncate text-slate-100">
-          <span className="font-mono text-xs text-slate-400">{ticketNumber(ticket)}</span> {ticket.summary}
-        </span>
-        <span className="flex items-center gap-x-2 truncate text-xs text-slate-500">
-          <span>{route.label}</span>
-          {reason ? <span className="truncate text-amber-400">{reason}</span> : null}
-          {!reason && step ? <span className="truncate text-slate-300">{step}</span> : null}
-          {!reason && flow?.startedAt && ACTIVE_FLOW.has(flow.status) ? <ElapsedLabel startedAt={flow.startedAt} /> : null}
+    <article className="flex h-[52px] items-center border-b border-line-soft pl-1" data-testid={`card-${ticket.key}`}>
+      <Link to="/issue/$key" params={{ key: ticket.key }} className="flex min-h-10 min-w-0 flex-1 items-center gap-2 pr-1">
+        <StatusIcon status={ticketIconStatus(ticket)} size={18} />
+        <span className="flex min-w-0 flex-1 flex-col justify-center">
+          <span className="truncate text-slate-100">
+            <span className="font-mono text-xs text-slate-400">{ticketNumber(ticket)}</span> {displayTitle(ticket.summary)}
+          </span>
+          <span className="flex items-center gap-x-2 overflow-hidden text-xs whitespace-nowrap text-slate-500">
+            <span>{route.label}</span>
+            {reason ? <span className="truncate text-st-running">{reason}</span> : null}
+            {!reason && step ? <span className="truncate text-slate-300">{step}</span> : null}
+            {!reason && flow?.startedAt && ACTIVE_FLOW.has(flow.status) ? <ElapsedLabel startedAt={flow.startedAt} /> : null}
+          </span>
         </span>
       </Link>
       <PrimaryAction ticket={ticket} />
@@ -127,7 +129,7 @@ function VirtualList({ tickets, onMenu }: { tickets: readonly Ticket[]; onMenu: 
               key={item.key}
               ref={virtualizer.measureElement}
               data-index={item.index}
-              className="absolute left-0 top-0 w-full pb-2"
+              className="absolute left-0 top-0 w-full"
               style={{ transform: `translateY(${item.start}px)` }}
             >
               <MobileCard ticket={ticket} onMenu={onMenu} />
@@ -139,7 +141,7 @@ function VirtualList({ tickets, onMenu }: { tickets: readonly Ticket[]; onMenu: 
   )
 }
 
-const FIELD = 'w-full rounded border border-slate-700 bg-slate-950 px-2 text-sm text-slate-200'
+const FIELD = 'w-full rounded border border-line bg-bg px-2 text-sm text-slate-200'
 
 interface FiltersSheetProps {
   filters: Filters
@@ -152,6 +154,22 @@ function FiltersSheet({ filters, options, onChange, onClose }: FiltersSheetProps
   return (
     <BottomSheet title="Filtres" onClose={onClose}>
       <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1 text-xs text-slate-400" role="group" aria-label="Route">
+          Route
+          <div className="flex flex-wrap gap-2">
+            {ROUTES.map((route) => (
+              <button
+                key={route || 'all'}
+                type="button"
+                aria-pressed={filters.route === route}
+                className={`${PILL} ${filters.route === route ? PILL_ON : PILL_OFF}`}
+                onClick={() => onChange({ route })}
+              >
+                {route ? ROUTE_ICON[route].label : 'Tout'}
+              </button>
+            ))}
+          </div>
+        </div>
         <label className="flex flex-col gap-1 text-xs text-slate-400">
           Recherche
           <input
@@ -188,7 +206,7 @@ function FiltersSheet({ filters, options, onChange, onClose }: FiltersSheetProps
           <button
             type="button"
             className="flex-1 rounded border border-slate-700 text-slate-300"
-            onClick={() => onChange({ milestone: '', label: '', query: '' })}
+            onClick={() => onChange({ route: '', milestone: '', label: '', query: '' })}
           >
             Effacer
           </button>
@@ -217,39 +235,24 @@ export default function BoardMobile() {
   // The state lives in the URL (`?s=`), one history entry per choice, so Back returns to the previous one.
   const chooseState = (id: StateId) =>
     void navigate({ to: '.', search: ((previous: Record<string, unknown>) => ({ ...previous, s: id })) as never })
-  const filterCount = activeFilterCount(filters)
+  const filterCount = activeFilterCount(filters) + (filters.route ? 1 : 0)
   const list = grouped[active]
   const shown = STATES.filter((state) => state.id === active || grouped[state.id].length > 0)
+  // The strip scrolls sideways: the state on screen must stay visible in it.
+  const activePill = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    activePill.current?.scrollIntoView?.({ block: 'nearest', inline: 'center' })
+  }, [active])
 
   return (
     <section className="flex h-full flex-col gap-2">
       <h1 className="sr-only">Board</h1>
-      <div className="-mx-3 -mt-3 flex shrink-0 flex-col gap-1 border-b border-slate-800 bg-slate-950 px-3 pt-2 pb-2">
-        <div className="flex items-center gap-2">
-          <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto" role="group" aria-label="Route">
-            {ROUTES.map((route) => (
-              <button
-                key={route || 'all'}
-                type="button"
-                aria-pressed={filters.route === route}
-                className={`${PILL} ${filters.route === route ? PILL_ON : PILL_OFF}`}
-                onClick={() => patch({ route })}
-              >
-                {route ? ROUTE_ICON[route].label : 'Tout'}
-              </button>
-            ))}
-          </div>
-          <button type="button" className={`${PILL} ${filterCount ? PILL_ON : PILL_OFF}`} onClick={() => setSheet('filters')}>
-            Filtres{filterCount ? ` ${filterCount}` : ''}
-          </button>
-          <button type="button" className={`${TOUCH} text-slate-300`} aria-label="Actions du board" onClick={() => setSheet('menu')}>
-            ⋯
-          </button>
-        </div>
-        <div className="flex gap-2 overflow-x-auto" role="group" aria-label="État">
+      <div className="-mx-3 -mt-3 flex shrink-0 items-center gap-1 border-b border-line bg-bg px-3 py-1.5">
+        <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none]" role="group" aria-label="État">
           {shown.map((state) => (
             <button
               key={state.id}
+              ref={state.id === active ? activePill : undefined}
               type="button"
               aria-pressed={state.id === active}
               className={`${PILL} ${state.id === active ? PILL_ON : PILL_OFF}`}
@@ -259,6 +262,12 @@ export default function BoardMobile() {
             </button>
           ))}
         </div>
+        <button type="button" className={`${PILL} ${filterCount ? PILL_ON : PILL_OFF}`} onClick={() => setSheet('filters')}>
+          Filtres{filterCount ? ` ${filterCount}` : ''}
+        </button>
+        <button type="button" className={`${TOUCH} text-slate-300`} aria-label="Actions du board" onClick={() => setSheet('menu')}>
+          ⋯
+        </button>
       </div>
       {tickets.isPending ? <p className="text-slate-500">Chargement…</p> : null}
       {tickets.isError ? <p className="text-red-400">Tickets illisibles : {tickets.error.message}</p> : null}
@@ -266,7 +275,7 @@ export default function BoardMobile() {
         list.length > VIRTUALIZE_ABOVE ? (
           <VirtualList key={active} tickets={list} onMenu={setCardMenu} />
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto">
+          <div className="flex min-h-0 flex-1 flex-col overflow-auto">
             {list.map((ticket) => (
               <MobileCard key={ticket.key} ticket={ticket} onMenu={setCardMenu} />
             ))}

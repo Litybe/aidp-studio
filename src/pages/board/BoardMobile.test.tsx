@@ -81,12 +81,14 @@ describe('BoardMobile', () => {
     expect(screen.queryByText('Dash en l’air')).not.toBeInTheDocument()
   })
 
-  it('filters with a route pill, with no native route select', async () => {
+  it('filters by route from the filters sheet, with no native route select', async () => {
     api([ready, readyB])
     renderPage(BoardPage)
     await screen.findByText('Salle du boss')
     expect(screen.queryByLabelText('Filtrer par route')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Doc' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Filtres' }))
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Filtres' })).getByRole('button', { name: 'Doc' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Voir les tickets' }))
     expect(screen.queryByText('Salle du boss')).not.toBeInTheDocument()
     expect(screen.getByText('Doc du HUD')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Prêtes 1' })).toBeInTheDocument()

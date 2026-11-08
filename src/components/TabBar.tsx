@@ -3,8 +3,8 @@ import { useState } from 'react'
 import { InboxBadge } from './InboxBadge'
 import { MemoryBadge } from './MemoryBadge'
 
-const TAB = 'flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-xs text-slate-400'
-const ACTIVE = { className: 'text-white bg-slate-800' }
+const TAB = 'flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 border-t-2 border-transparent px-1 text-xs text-slate-400'
+const ACTIVE = { className: 'border-accent bg-surface-2 text-white' }
 
 const MORE = [
   { to: '/memory', label: 'Mémoire' },
@@ -16,7 +16,7 @@ const MORE = [
 export function TabBar() {
   const [open, setOpen] = useState(false)
   return (
-    <nav className="relative shrink-0 border-t border-slate-800 bg-slate-900 pb-[env(safe-area-inset-bottom)]" aria-label="Navigation">
+    <nav className="relative shrink-0 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]" aria-label="Navigation">
       {open ? (
         <ul className="absolute bottom-full right-0 w-48 border border-slate-700 bg-slate-900 shadow-lg">
           {MORE.map((item) => (

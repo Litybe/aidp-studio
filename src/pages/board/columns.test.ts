@@ -1,5 +1,18 @@
 import type { Ticket } from '../../api/types'
-import { buildBoard, canSendToTest, columnOf, COLUMNS, routeOf, ticketNumber } from './columns'
+import { buildBoard, canSendToTest, columnOf, COLUMNS, displayTitle, routeOf, ticketNumber } from './columns'
+
+describe('displayTitle', () => {
+  it.each([
+    ['feat(art): buste de Garance', 'buste de Garance'],
+    ['fix(combat): reformer le dash', 'reformer le dash'],
+    ['chore: nettoyage', 'nettoyage'],
+    ['Dash en l’air', 'Dash en l’air'],
+    ['RM-1.A4: cadre', 'RM-1.A4: cadre'],
+    ['feat(art): ', 'feat(art): '],
+  ])('%s', (summary, expected) => {
+    expect(displayTitle(summary)).toBe(expected)
+  })
+})
 
 const t = (over: Partial<Ticket>): Ticket => ({ key: 'GH-1', summary: 'x', status: 'todo', ...over })
 

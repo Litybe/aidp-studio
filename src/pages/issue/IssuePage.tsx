@@ -2,15 +2,19 @@ import { useParams } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { isNotFound } from '../../api/actions'
 import { useFlow, useTicket, useTicketCost, useTicketPr } from '../../api/f1queries'
-import type { Ticket } from '../../api/types'
+import type { FlowRun, Ticket } from '../../api/types'
+import { StatusIcon } from '../../components/StatusIcon'
 import { LaunchRunButton } from '../../components/run/LaunchButtons'
+import { formatDateTime } from '../../lib/format'
+import { FLOW_LABEL, flowIconStatus } from '../../lib/status'
 import { ROUTE_ICON, routeOf, ticketNumber } from '../board/columns'
+import { ticketIconStatus } from '../board/ticketStatus'
 import { costLabel } from '../board/TicketCard'
 import { IssueActions } from './IssueActions'
-import { SessionPanel } from './SessionPanel'
 import { ArtifactsTab, AssumptionsTab, JournalTab, ProofsTab } from './tabs'
+import { Duration } from './StepList'
 import { Timeline } from './Timeline'
-import { buildTimeline, runIdsOf, sessionOfStep } from './flowTimeline'
+import { runIdsOf } from './flowTimeline'
 
 const ACTIVE_FLOW = new Set(['running', 'pausing', 'waiting_human', 'waiting_external'])
 
@@ -24,33 +28,48 @@ const TABS: readonly { id: TabId; label: string }[] = [
 
 function Header({
   ticket,
-  flowPr,
-  flowActive,
+  flow,
 }: {
   ticket: Ticket
-  flowPr: { number: number; url?: string | null } | null
-  flowActive: boolean
+  flow: FlowRun | undefined
 }) {
   const cost = useTicketCost(ticket.key).data
   const pr = useTicketPr(ticket.key, true).data
   const route = ROUTE_ICON[routeOf(ticket)]
+  const flowPr = flow?.pr ?? null
+  const flowActive = flow ? ACTIVE_FLOW.has(flow.status) : false
   const prNumber = pr?.number ?? flowPr?.number
   const prUrl = pr?.url ?? flowPr?.url ?? undefined
   const total = costLabel(cost)
+  const lane = ticket.phase === 'to-test' || ticket.phase === 'testing' ? 'test' : ticket.phase === 'dev' ? 'dev' : null
+  const status = flow ? flowIconStatus(flow.status) : ticketIconStatus(ticket)
   return (
-    <header className="space-y-1">
-      <h1 className="text-lg font-semibold text-slate-100">
-        <span className="font-mono text-slate-400">{ticketNumber(ticket)}</span> {ticket.summary}{' '}
+    <header className="space-y-1.5 border-b border-line pb-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h1 className="flex min-w-0 items-start gap-2 text-lg font-semibold text-slate-100">
+          <StatusIcon status={status} size={20} className="mt-1" />
+          <span className="min-w-0">
+            <span className="font-mono text-slate-400">{ticketNumber(ticket)}</span> {ticket.summary}
+          </span>
+        </h1>
         {flowActive ? null : <LaunchRunButton ticket={ticket} label="Lancer un run…" />}
-      </h1>
-      <p className="flex flex-wrap items-center gap-x-3 text-xs text-slate-400">
+      </div>
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-400">
+        {flow ? <span className="font-mono text-slate-300">{flow.def.id}</span> : null}
+        {flow ? <span>{FLOW_LABEL[flow.status] ?? flow.status}</span> : <span>{ticket.status}</span>}
+        {lane ? <span className="rounded border border-line px-1.5">{`voie ${lane}`}</span> : null}
+        {flow?.started_at ? (
+          <span>
+            <Duration start={flow.started_at} end={flow.ended_at} />
+            {` · début ${formatDateTime(flow.started_at)}`}
+          </span>
+        ) : null}
         <span>{route.label}</span>
         {ticket.milestone ? <span>{ticket.milestone.title}</span> : null}
-        <span>{ticket.status}</span>
         {prNumber !== undefined ? (
           <span>
             {prUrl ? (
-              <a href={prUrl} target="_blank" rel="noreferrer noopener" className="text-sky-400 underline">
+              <a href={prUrl} target="_blank" rel="noreferrer noopener" className="text-accent hover:underline">
                 PR #{prNumber}
               </a>
             ) : (
@@ -63,6 +82,7 @@ function Header({
         ) : null}
         {total ? <span title="Coût total">{total}</span> : null}
       </p>
+      {flow ? <IssueActions flow={flow} /> : null}
     </header>
   )
 }
@@ -73,9 +93,7 @@ export default function IssuePage() {
   const flow = useFlow(key)
   const [tab, setTab] = useState<TabId>('artifacts')
   const flowData = flow.data
-  const phases = useMemo(() => (flowData ? buildTimeline(flowData) : []), [flowData])
   const runIds = useMemo(() => runIdsOf(flowData), [flowData])
-  const sessionId = flowData ? sessionOfStep(flowData, flowData.current) : null
 
   if (ticket.isPending) return <p className="text-slate-500">Chargement…</p>
   if (ticket.isError) {
@@ -87,12 +105,8 @@ export default function IssuePage() {
   }
 
   return (
-    <section className="max-w-5xl space-y-5">
-      <Header
-        ticket={ticket.data.ticket}
-        flowPr={flowData?.pr ?? null}
-        flowActive={flowData ? ACTIVE_FLOW.has(flowData.status) : false}
-      />
+    <section className="mx-auto max-w-7xl space-y-4">
+      <Header ticket={ticket.data.ticket} flow={flowData} />
       {flow.isError ? (
         isNotFound(flow.error) ? (
           <p className="text-sm text-slate-500">Pas de flow actif pour cette issue.</p>
@@ -102,15 +116,7 @@ export default function IssuePage() {
       ) : null}
       {flowData ? (
         <>
-          <IssueActions flow={flowData} />
-          <div>
-            <h2 className="mb-1 text-sm font-semibold text-slate-300">Timeline</h2>
-            <Timeline phases={phases} current={flowData.current ?? null} />
-          </div>
-          <div>
-            <h2 className="mb-1 text-sm font-semibold text-slate-300">Session</h2>
-            <SessionPanel sessionId={sessionId} />
-          </div>
+          <Timeline key={flowData.key} flow={flowData} />
           <div>
             <div role="tablist" className="mb-2 flex gap-1 overflow-x-auto border-b border-slate-800">
               {TABS.map((entry) => (
