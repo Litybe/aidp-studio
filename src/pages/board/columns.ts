@@ -92,14 +92,20 @@ export interface Filters {
   route: TicketRoute | ''
   milestone: string
   label: string
+  /** Free text matched against the title and the `#n` (phone filter sheet). */
+  query: string
 }
 
-export const NO_FILTERS: Filters = { route: '', milestone: '', label: '' }
+export const NO_FILTERS: Filters = { route: '', milestone: '', label: '', query: '' }
 
 export function matchesFilters(ticket: Ticket, filters: Filters): boolean {
   if (filters.route && routeOf(ticket) !== filters.route) return false
   if (filters.milestone && (ticket.milestone?.title ?? '') !== filters.milestone) return false
   if (filters.label && !(ticket.labels ?? []).includes(filters.label)) return false
+  const query = filters.query.trim().toLowerCase().replace(/^#/, '')
+  if (query && !ticket.summary.toLowerCase().includes(query) && !ticketNumber(ticket).toLowerCase().includes(query)) {
+    return false
+  }
   return true
 }
 
@@ -130,4 +136,46 @@ export function canSendToTest(ticket: Ticket): boolean {
   if (columnOf(ticket) !== 'review') return false
   const status = ticket.flowSummary?.status
   return status === 'done' || status === 'completed'
+}
+
+export type StateId = 'ready' | 'dev' | 'review' | 'to-test' | 'test' | 'merge' | 'blocked' | 'done'
+
+export interface StateDef {
+  id: StateId
+  label: string
+  columns: readonly ColumnId[]
+}
+
+/** The phone view shows one state at a time; the ten columns fold into eight states. */
+export const STATES: readonly StateDef[] = [
+  { id: 'ready', label: 'Prêtes', columns: ['ready', 'queued'] },
+  { id: 'dev', label: 'Dev', columns: ['realisation'] },
+  { id: 'review', label: 'Revue', columns: ['review'] },
+  { id: 'to-test', label: 'À tester', columns: ['to-test'] },
+  { id: 'test', label: 'Test', columns: ['test'] },
+  { id: 'merge', label: 'À merger', columns: ['merge'] },
+  { id: 'blocked', label: 'Bloquées', columns: ['blocked', 'triage'] },
+  { id: 'done', label: 'Faites', columns: ['done'] },
+]
+
+export function isStateId(value: unknown): value is StateId {
+  return STATES.some((state) => state.id === value)
+}
+
+export function groupByState(board: Board): Record<StateId, Ticket[]> {
+  return Object.fromEntries(
+    STATES.map((state) => [state.id, state.columns.flatMap((column) => board[column])]),
+  ) as Record<StateId, Ticket[]>
+}
+
+const ACTION_FIRST: readonly StateId[] = ['merge', 'blocked', 'to-test', 'dev', 'ready']
+
+/** State opened by default: the first one that asks for an action, else the first non-empty. */
+export function defaultState(grouped: Record<StateId, readonly Ticket[]>): StateId {
+  const found = ACTION_FIRST.find((id) => grouped[id].length > 0)
+  return found ?? STATES.find((state) => grouped[state.id].length > 0)?.id ?? 'ready'
+}
+
+export function activeFilterCount(filters: Filters): number {
+  return [filters.milestone, filters.label, filters.query.trim()].filter(Boolean).length
 }

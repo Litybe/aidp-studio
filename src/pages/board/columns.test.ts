@@ -82,9 +82,9 @@ describe('buildBoard', () => {
   })
 
   it('filters by route, milestone and label', () => {
-    expect(buildBoard(tickets, { route: 'art', milestone: '', label: '' }).ready.map((x) => x.key)).toEqual(['GH-2'])
-    expect(buildBoard(tickets, { route: '', milestone: 'M1', label: '' }).ready.map((x) => x.key)).toEqual(['GH-1'])
-    expect(buildBoard(tickets, { route: '', milestone: '', label: 'feature' }).ready.map((x) => x.key)).toEqual(['GH-1'])
+    expect(buildBoard(tickets, { route: 'art', milestone: '', label: '', query: '' }).ready.map((x) => x.key)).toEqual(['GH-2'])
+    expect(buildBoard(tickets, { route: '', milestone: 'M1', label: '', query: '' }).ready.map((x) => x.key)).toEqual(['GH-1'])
+    expect(buildBoard(tickets, { route: '', milestone: '', label: 'feature', query: '' }).ready.map((x) => x.key)).toEqual(['GH-1'])
   })
 })
 
