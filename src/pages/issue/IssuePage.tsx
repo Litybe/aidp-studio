@@ -14,6 +14,7 @@ import { IssueActions } from './IssueActions'
 import { ArtifactsTab, AssumptionsTab, JournalTab, ProofsTab } from './tabs'
 import { Duration } from './StepList'
 import { GateCard, Timeline } from './Timeline'
+import { columnOf } from '../board/columns'
 import { isMergePending, MergeOverview } from './merge/MergeOverview'
 import { runIdsOf } from './flowTimeline'
 
@@ -143,7 +144,7 @@ export default function IssuePage() {
           <p className="text-sm text-red-400">Flow illisible : {flow.error.message}</p>
         )
       ) : null}
-      {flowData && isMergePending(flowData) ? (
+      {flowData && (isMergePending(flowData) || columnOf(ticket.data.ticket) === 'merge') ? (
         <>
           <GateCard flow={flowData} />
           <MergeOverview ticket={ticket.data.ticket} flow={flowData} body={ticket.data.body} />

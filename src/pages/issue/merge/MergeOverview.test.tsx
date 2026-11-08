@@ -115,12 +115,22 @@ describe('merge overview', () => {
     expect(await screen.findByText('+gros fichier')).toBeInTheDocument()
   })
 
-  it('keeps the old page when the waiting step is not merge_approval', async () => {
-    const other: FlowRun = { ...flow, def: { ...flow.def, steps: [{ id: 'merge_gate', kind: 'human' }] }, current: 'merge_gate', steps: { merge_gate: { status: 'waiting_human' } } }
-    mockApi({ ...art, 'GET /flows/GH-9': { body: other } })
+  const otherGate: FlowRun = { ...flow, def: { ...flow.def, steps: [{ id: 'merge_gate', kind: 'human' }] }, current: 'merge_gate', steps: { merge_gate: { status: 'waiting_human' } } }
+
+  it('keeps the old page for a ticket that does not wait for a merge', async () => {
+    const running = ticket('art')
+    running.body.ticket.status = 'in-progress'
+    mockApi({ ...art, 'GET /tickets/GH-9': running, 'GET /flows/GH-9': { body: otherGate } })
     render9()
     expect(await screen.findByRole('button', { name: 'Approuver' })).toBeInTheDocument()
     expect(screen.queryByTestId('merge-overview')).toBeNull()
     expect(screen.getByRole('tab', { name: 'Artefacts' })).toBeInTheDocument()
+  })
+
+  it('shows the overview and its gate for any ticket of the merge column', async () => {
+    mockApi({ ...art, 'GET /flows/GH-9': { body: otherGate } })
+    render9()
+    expect(await screen.findByTestId('merge-overview')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Approuver' })).toBeInTheDocument()
   })
 })
