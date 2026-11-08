@@ -25,6 +25,14 @@ export function routedFlow(ticket: Ticket, routing: RoutingSettings | undefined)
   return Object.values(repos).find((repo) => repo.route === route && repo.flow)?.flow ?? ''
 }
 
+export const TEST_FLOWS_LABEL = 'Test Unity (checkout principal, une issue à la fois)'
+
+/** Catalog flows split into the dev ones and the `game-test-*` ones (C13: test lane, main checkout). */
+export function splitFlows<T extends { id: string }>(flows: readonly T[]): { dev: T[]; test: T[] } {
+  const test = flows.filter((entry) => entry.id.startsWith('game-test-'))
+  return { dev: flows.filter((entry) => !entry.id.startsWith('game-test-')), test }
+}
+
 export interface StartReply {
   flowKey?: string
   runId?: string
@@ -35,6 +43,7 @@ export default function TicketRunDialog({ ticket, onClose }: { ticket: Ticket; o
   const navigate = useNavigate()
   const flows = useCatalogFlows().data ?? []
   const templates = useCatalogTemplates().data ?? []
+  const { dev: devFlows, test: testFlows } = splitFlows(flows)
   const routing = useRouting().data
   const budget = useBudgetSettings().data
   const paused = useDispatcherBudget(selectPaused).data === true
@@ -102,11 +111,26 @@ export default function TicketRunDialog({ ticket, onClose }: { ticket: Ticket; o
           <Field label="Flow" required>
             <select className={INPUT} value={flow} onChange={(event) => setFlowChoice(event.target.value)}>
               <option value="">— choisir —</option>
-              {flows.map((entry) => (
-                <option key={entry.id} value={entry.id}>
-                  {entry.name ?? entry.id}
-                </option>
-              ))}
+              {testFlows.length === 0
+                ? flows.map((entry) => (
+                    <option key={entry.id} value={entry.id}>
+                      {entry.name ?? entry.id}
+                    </option>
+                  ))
+                : [
+                    ...devFlows.map((entry) => (
+                      <option key={entry.id} value={entry.id}>
+                        {entry.name ?? entry.id}
+                      </option>
+                    )),
+                    <optgroup key="test-lane" label={TEST_FLOWS_LABEL}>
+                      {testFlows.map((entry) => (
+                        <option key={entry.id} value={entry.id}>
+                          {entry.name ?? entry.id}
+                        </option>
+                      ))}
+                    </optgroup>,
+                  ]}
             </select>
           </Field>
         ) : (
