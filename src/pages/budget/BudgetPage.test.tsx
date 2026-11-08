@@ -169,11 +169,42 @@ describe('Budget page', () => {
   it('refuses a text that is not a number without calling the daemon', async () => {
     const calls = mockFetch({ 'GET /dispatcher/budget': { body: BUDGET }, 'GET /settings/budget': { body: SETTINGS } })
     renderPage(<BudgetPage />)
-    const slots = await screen.findByLabelText('Slots')
+    const slots = await screen.findByLabelText('Places de dev')
     await userEvent.clear(slots)
     await userEvent.type(slots, 'abc')
     await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
     expect(await screen.findByText('nombre attendu')).toBeInTheDocument()
     expect(calls.some((call) => call.method === 'PUT')).toBe(false)
+  })
+
+  it('edits the test places when the daemon sends them, read-only otherwise', async () => {
+    const withTest = { ...SETTINGS, dispatcher: { ...SETTINGS.dispatcher, test_slots: 1 } }
+    const calls = mockFetch({
+      'GET /dispatcher/budget': { body: BUDGET },
+      'GET /settings/budget': { body: withTest },
+      'PUT /settings/budget': { body: { ...withTest, reloadRequired: false, changed: true } },
+    })
+    renderPage(<BudgetPage />)
+    const field = await screen.findByLabelText('Places de test')
+    expect(field).not.toHaveAttribute('readonly')
+    expect(field).toHaveValue('1')
+    await userEvent.clear(field)
+    await userEvent.type(field, '2')
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    await screen.findByLabelText('Places de test')
+    expect(calls.filter((call) => call.method === 'PUT').at(-1)?.body).toMatchObject({ dispatcher: { test_slots: 2 } })
+  })
+
+  it('shows the test places read-only and never sends them when the daemon omits them', async () => {
+    const calls = mockFetch({
+      'GET /dispatcher/budget': { body: BUDGET },
+      'GET /settings/budget': { body: SETTINGS },
+      'PUT /settings/budget': { body: { ...SETTINGS, reloadRequired: false, changed: true } },
+    })
+    renderPage(<BudgetPage />)
+    expect(await screen.findByLabelText('Places de test')).toHaveAttribute('readonly')
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    await waitFor(() => expect(calls.some((call) => call.method === 'PUT')).toBe(true))
+    expect(JSON.stringify(calls.filter((call) => call.method === 'PUT').at(-1)?.body)).not.toContain('test_slots')
   })
 })

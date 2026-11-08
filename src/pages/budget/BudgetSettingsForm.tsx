@@ -35,6 +35,8 @@ export function BudgetSettingsForm({ settings }: { settings: BudgetSettings }) {
   const [minReserve, setMinReserve] = useState(String(budget.pixellab.min_reserve))
   const [generations, setGenerations] = useState(String(budget.pixellab.per_ticket))
   const [slots, setSlots] = useState(String(dispatcher.slots))
+  const testSlotsKnown = dispatcher.test_slots !== undefined
+  const [testSlots, setTestSlots] = useState(testSlotsKnown ? String(dispatcher.test_slots) : '')
   const [night, setNight] = useState(dispatcher.night)
   const [windowMinutes, setWindowMinutes] = useState(String(dispatcher.night.heavy_window_minutes))
   const [stop, setStop] = useState(dispatcher.stop_at_7d_percent === null ? '' : String(dispatcher.stop_at_7d_percent))
@@ -60,6 +62,7 @@ export function BudgetSettingsForm({ settings }: { settings: BudgetSettings }) {
     if (reserve !== undefined) pixellab.min_reserve = reserve
     if (perIssue !== undefined) pixellab.per_ticket = perIssue
     const slotCount = number('dispatcher.slots', slots)
+    const testSlotCount = testSlotsKnown ? number('dispatcher.test_slots', testSlots) : undefined
     const stopPercent = number('dispatcher.stop_at_7d_percent', stop)
     const heavyWindow = number('dispatcher.night.heavy_window_minutes', windowMinutes)
     setLocal(problems)
@@ -68,6 +71,7 @@ export function BudgetSettingsForm({ settings }: { settings: BudgetSettings }) {
       budget: { per_ticket: perTicket, pixellab },
       dispatcher: {
         ...(slotCount === undefined ? {} : { slots: slotCount }),
+        ...(testSlotCount === undefined ? {} : { test_slots: testSlotCount }),
         stop_at_7d_percent: stopPercent ?? null,
         night: { ...night, ...(heavyWindow === undefined ? {} : { heavy_window_minutes: heavyWindow }) },
       },
@@ -109,9 +113,22 @@ export function BudgetSettingsForm({ settings }: { settings: BudgetSettings }) {
         </label>
       </fieldset>
       <label className="flex flex-wrap items-center gap-2">
-        <span className="w-40 text-slate-300">Slots du dispatcher</span>
-        <input className={INPUT} inputMode="numeric" value={slots} onChange={(event) => setSlots(event.target.value)} aria-label="Slots" />
+        <span className="w-40 text-slate-300">Places de dev</span>
+        <input className={INPUT} inputMode="numeric" value={slots} onChange={(event) => setSlots(event.target.value)} aria-label="Places de dev" />
         <Errors messages={errors('dispatcher.slots')} />
+      </label>
+      <label className="flex flex-wrap items-center gap-2">
+        <span className="w-40 text-slate-300">Places de test</span>
+        <input
+          className={INPUT}
+          inputMode="numeric"
+          value={testSlotsKnown ? testSlots : ''}
+          placeholder={testSlotsKnown ? undefined : 'non communiqué'}
+          readOnly={!testSlotsKnown}
+          onChange={(event) => setTestSlots(event.target.value)}
+          aria-label="Places de test"
+        />
+        <Errors messages={errors('dispatcher.test_slots')} />
       </label>
       <fieldset className="flex flex-col gap-1">
         <legend className="mb-1 text-xs text-slate-400">Mode nuit</legend>
