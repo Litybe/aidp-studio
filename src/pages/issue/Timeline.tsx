@@ -111,7 +111,7 @@ function Sidebar({ flow, jobs, selected, onSelect }: { flow: FlowRun; jobs: read
 }
 
 /** The decision a human step waits for, like a deployment approval: prompt, then the buttons. */
-function GateCard({ flow }: { flow: FlowRun }) {
+export function GateCard({ flow }: { flow: FlowRun }) {
   const current = flow.current ?? null
   if (!current || flow.steps[current]?.status !== 'waiting_human') return null
   const item = [...(flow.inbox ?? [])].reverse().find((entry) => entry.step === current)
@@ -179,7 +179,7 @@ function JobAccordion({ flow, jobs, open, onToggle, overrides, onStep }: Accordi
 }
 
 /** The flow as a workflow run: summary and jobs on the left, job graph and step list in the middle. */
-export const Timeline = memo(function Timeline({ flow }: { flow: FlowRun }) {
+export const Timeline = memo(function Timeline({ flow, showGate = true }: { flow: FlowRun; showGate?: boolean }) {
   const mobile = useIsMobile()
   const jobs = useMemo(() => buildJobs(flow), [flow])
   const [picked, setPicked] = useState<string | null>(null)
@@ -201,7 +201,7 @@ export const Timeline = memo(function Timeline({ flow }: { flow: FlowRun }) {
       })
     return (
       <div className="space-y-3">
-        <GateCard flow={flow} />
+        {showGate ? <GateCard flow={flow} /> : null}
         <JobAccordion flow={flow} jobs={jobs} open={open} onToggle={toggle} overrides={overrides} onStep={onStep} />
       </div>
     )
@@ -210,7 +210,7 @@ export const Timeline = memo(function Timeline({ flow }: { flow: FlowRun }) {
     <div className="flex items-start gap-4">
       <Sidebar flow={flow} jobs={jobs} selected={selected} onSelect={setPicked} />
       <div className="min-w-0 flex-1 space-y-3">
-        <GateCard flow={flow} />
+        {showGate ? <GateCard flow={flow} /> : null}
         <JobGraph jobs={jobs} selected={selected} onSelect={setPicked} />
         {job ? <StepList job={job} flow={flow} overrides={overrides} onToggle={onStep} /> : null}
       </div>
