@@ -242,7 +242,7 @@ export default function BoardMobile() {
     <section className="flex h-full flex-col gap-2">
       <h1 className="sr-only">Board</h1>
       <div className="-mx-3 -mt-3 flex shrink-0 items-center gap-1 border-b border-line bg-bg px-3 py-1.5">
-        <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto" role="group" aria-label="État">
+        <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none]" role="group" aria-label="État">
           {shown.map((state) => (
             <button
               key={state.id}

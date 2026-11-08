@@ -46,8 +46,8 @@ function Header({
   return (
     <header className="space-y-1.5 border-b border-line pb-3">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h1 className="flex min-w-0 items-center gap-2 text-lg font-semibold text-slate-100">
-          <StatusIcon status={status} size={20} />
+        <h1 className="flex min-w-0 items-start gap-2 text-lg font-semibold text-slate-100">
+          <StatusIcon status={status} size={20} className="mt-1" />
           <span className="min-w-0">
             <span className="font-mono text-slate-400">{ticketNumber(ticket)}</span> {ticket.summary}
           </span>

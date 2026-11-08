@@ -62,7 +62,7 @@ export const Column = memo(function Column({ label, tickets, queue }: ColumnProp
     )
   }
   return (
-    <section className="flex w-60 shrink-0 flex-col" aria-label={label}>
+    <section className="flex w-64 shrink-0 flex-col" aria-label={label}>
       <h2 className="sticky top-0 z-10 mb-1.5 flex items-center justify-between rounded-md bg-surface px-2 py-1 text-xs font-semibold tracking-wide text-slate-300 uppercase">
         {label}
         <span className="rounded-full bg-slate-800 px-1.5 text-slate-300 tabular-nums">{tickets.length}</span>

@@ -37,7 +37,7 @@ function Detail({ step, flow }: { step: JobStep; flow: FlowRun }) {
   const warnings = warningsOf(state?.outputs)
   const session = sessionOfStep(flow, step.id)
   const failed = step.status === 'failed' || step.status === 'escalated'
-  const empty = !state?.reason && !state?.detail && outputs.length === 0 && warnings.length === 0 && !session
+  const empty = !state?.reason && !state?.detail && outputs.length === 0 && warnings.length === 0 && !session && !state?.started_at
   return (
     <div className="space-y-2 border-t border-line-soft bg-bg px-3 py-2 pl-9 font-mono text-xs">
       {state?.reason ? <p className="text-st-running">{state.reason}</p> : null}
