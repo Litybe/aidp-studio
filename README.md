@@ -52,8 +52,26 @@ Then open `http://127.0.0.1:3001/`. A UI action that `POST`s needs
 | `src/api/` | `types.ts` (hand-written from `docs/gateway-api.md`), `client.ts` (typed `fetch`, base `/api`), `queries.ts` (query keys, Query client, hooks) |
 | `src/realtime/` | `events.ts` (the single `EventSource`, backoff, resume with `?since=`), `invalidation.ts` (event type → query keys, batching), `runtime.ts`, `context.ts` |
 | `src/lib/` | `gauge.ts` (5 h / 7 d gauges), `ticker.ts` (the 1 Hz clock), `ring.ts`, `store.ts`, `visibility.ts` |
-| `src/components/` | Top bar, gauges, sidebar, unreachable page |
-| `src/pages/` | One lazy chunk per page: Board, Inbox, Unity, Budget, Réglages |
+| `src/components/ui/` | Design tokens in use: `classes.ts` (card, title, field and button class strings), `Icon` (inline SVG set), `Card`, `PageHeader`, `Pill`, `EmptyState` |
+| `src/components/` | Sidebar (grouped, collapsible), top bar, phone tab bar, gauges, indicators, `nav.ts` (the one list of pages), `palette/` (Ctrl K) |
+| `src/pages/` | One lazy chunk per page: Accueil (`home/`), Board, Issue, Inbox, Unity, Budget, Mémoire, Art, Réglages |
+
+## Navigation
+
+- **Accueil** (`/`) is the landing page: what waits for a decision, the active flows with their step and
+  elapsed time, the pipeline (tickets per column), the 5 h / 7 d windows with the dispatcher verdict, the
+  Unity editor and lock. Every number links to the page that acts on it; the first inbox items carry
+  their one-click actions (merge, approve, answer, unblock).
+- **Sidebar** (desktop): pages grouped as Suivi / Studio / Pilotage, badges for the inbox and the memory
+  proposals, daemon and Unity state at the bottom. « Replier » keeps icons only (remembered in
+  `localStorage`). On the phone, a bottom tab bar holds Accueil, Board, Inbox, Unity and « Plus… ».
+- **Palette** (`Ctrl K`, `/`): jump to a page, an issue (`#214` or a word of its title) or run a global
+  action (Sync GitHub, pause / resume the dispatcher, Nouveau run). Its chunk loads on first use.
+- **Chords**: `g` then `h` Accueil, `b` Board, `i` Inbox, `u` Unity, `a` Art, `m` Mémoire, `$` Budget,
+  `s` Réglages. Nothing fires while a field or a dialog has the focus.
+- **Colours**: tokens in `src/index.css` (`@theme`): surfaces `canvas` → `panel` → `card` → `raised`,
+  borders `line` / `line-strong`, text `ink` / `ink-soft` / `ink-muted` / `ink-faint`, one `accent`.
+  Columns, pills and dots share the same four tones (ok, warn, danger, muted) plus accent and violet.
 
 ## Performance
 

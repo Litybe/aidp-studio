@@ -47,17 +47,21 @@ describe('navigation by width', () => {
     simulateWidth(true)
     await renderApp()
     const nav = screen.getByRole('navigation', { name: 'Navigation' })
-    for (const name of ['Board', 'Inbox', 'Unity', 'Budget', 'Plus…']) {
+    for (const name of ['Accueil', 'Board', 'Inbox', 'Unity', 'Plus…']) {
       expect(nav).toHaveTextContent(name)
     }
     expect(nav).not.toHaveTextContent('Réglages')
+    expect(nav).not.toHaveTextContent('Budget')
   })
 
   it('keeps the side navigation on a desktop', async () => {
     simulateWidth(false)
     await renderApp()
     const nav = screen.getByRole('navigation', { name: 'Navigation' })
+    expect(nav).toHaveTextContent('Accueil')
+    expect(nav).toHaveTextContent('Budget')
     expect(nav).toHaveTextContent('Réglages')
     expect(nav).not.toHaveTextContent('Plus…')
+    expect(screen.getByRole('button', { name: 'Replier la navigation' })).toBeInTheDocument()
   })
 })

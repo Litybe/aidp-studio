@@ -34,11 +34,11 @@ export function BottomSheet({ title, onClose, children }: BottomSheetProps) {
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className="relative max-h-[80dvh] overflow-auto rounded-t-xl border-t border-slate-700 bg-slate-900 p-3 pb-6 outline-none [&_button]:min-h-11 [&_button]:px-3 [&_button]:text-sm [&_input]:min-h-11 [&_select]:min-h-11"
+        className="relative max-h-[80dvh] overflow-auto rounded-t-2xl border-t border-line-strong bg-card p-3 pb-6 outline-none [&_button]:min-h-11 [&_button]:px-3 [&_button]:text-sm [&_input]:min-h-11 [&_select]:min-h-11"
       >
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-100">{title}</h2>
-          <button type="button" className="rounded px-3 text-slate-300 hover:bg-slate-800" onClick={onClose}>
+          <h2 className="text-sm font-semibold text-ink">{title}</h2>
+          <button type="button" className="rounded px-3 text-ink-soft hover:bg-raised" onClick={onClose}>
             Fermer
           </button>
         </div>

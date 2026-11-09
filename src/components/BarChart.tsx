@@ -27,20 +27,20 @@ export const BarChart = memo(function BarChart({
   ariaLabel: string
   format?: (value: number) => string
 }) {
-  if (items.length === 0) return <p className="text-xs text-slate-500">aucune donnée</p>
+  if (items.length === 0) return <p className="text-xs text-ink-faint">aucune donnée</p>
   const widths = barWidths(items)
   return (
     <ul className="flex flex-col gap-1" aria-label={ariaLabel}>
       {items.map((item, index) => (
         <li key={item.label} className="grid grid-cols-[9rem_1fr_4.5rem] items-center gap-2 text-xs">
-          <span className="truncate text-slate-300" title={item.label}>
+          <span className="truncate text-ink-soft" title={item.label}>
             {item.label}
           </span>
           <svg viewBox="0 0 100 6" preserveAspectRatio="none" className="h-2 w-full" role="img" aria-label={`${item.label} : ${format(item.value)}`}>
-            <rect x="0" y="0" width="100" height="6" className="fill-slate-800" />
-            <rect x="0" y="0" width={widths[index]} height="6" className="fill-sky-500" data-testid="bar" />
+            <rect x="0" y="0" width="100" height="6" className="fill-raised" />
+            <rect x="0" y="0" width={widths[index]} height="6" className="fill-accent" data-testid="bar" />
           </svg>
-          <span className="text-right tabular-nums text-slate-200">{format(item.value)}</span>
+          <span className="text-right tabular-nums text-ink">{format(item.value)}</span>
         </li>
       ))}
     </ul>

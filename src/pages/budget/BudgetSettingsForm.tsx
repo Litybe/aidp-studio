@@ -1,10 +1,11 @@
+import { INPUT as BASE_INPUT } from '../../components/ui/classes'
 import { useState, type FormEvent } from 'react'
 import { fieldErrors } from '../../api/send'
 import { ROUTES, type BudgetSettings, type BudgetUpdate, type PerTicketBudget } from '../../api/types/budget'
 import { SaveStatus } from '../../components/SaveStatus'
 import { fromMillions, toMillions, useSaveBudget } from './queries'
 
-const INPUT = 'w-24 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-right tabular-nums'
+const INPUT = `${BASE_INPUT} w-24 text-right tabular-nums`
 const CEILING_KEYS = [...ROUTES, 'default'] as const
 const NOT_A_NUMBER = 'nombre attendu'
 
@@ -84,10 +85,10 @@ export function BudgetSettingsForm({ settings }: { settings: BudgetSettings }) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3" aria-label="Plafonds et planification">
       <fieldset className="flex flex-col gap-1">
-        <legend className="mb-1 text-xs text-slate-400">Plafond par issue (millions de tokens, 0 = sans plafond)</legend>
+        <legend className="mb-1 text-xs text-ink-muted">Plafond par issue (millions de tokens, 0 = sans plafond)</legend>
         {CEILING_KEYS.map((key) => (
           <label key={key} className="flex flex-wrap items-center gap-2">
-            <span className="w-14 text-slate-300">{key}</span>
+            <span className="w-14 text-ink-soft">{key}</span>
             <input
               className={INPUT}
               inputMode="decimal"
@@ -100,25 +101,25 @@ export function BudgetSettingsForm({ settings }: { settings: BudgetSettings }) {
         ))}
       </fieldset>
       <fieldset className="flex flex-col gap-1">
-        <legend className="mb-1 text-xs text-slate-400">Crédits Pixellab</legend>
+        <legend className="mb-1 text-xs text-ink-muted">Crédits Pixellab</legend>
         <label className="flex flex-wrap items-center gap-2">
-          <span className="w-40 text-slate-300">Réserve minimale</span>
+          <span className="w-40 text-ink-soft">Réserve minimale</span>
           <input className={INPUT} inputMode="decimal" value={minReserve} onChange={(event) => setMinReserve(event.target.value)} aria-label="Réserve Pixellab" />
           <Errors messages={errors('budget.pixellab.min_reserve')} />
         </label>
         <label className="flex flex-wrap items-center gap-2">
-          <span className="w-40 text-slate-300">Générations par issue</span>
+          <span className="w-40 text-ink-soft">Générations par issue</span>
           <input className={INPUT} inputMode="numeric" value={generations} onChange={(event) => setGenerations(event.target.value)} aria-label="Générations Pixellab par issue" />
           <Errors messages={errors('budget.pixellab.per_ticket')} />
         </label>
       </fieldset>
       <label className="flex flex-wrap items-center gap-2">
-        <span className="w-40 text-slate-300">Places de dev</span>
+        <span className="w-40 text-ink-soft">Places de dev</span>
         <input className={INPUT} inputMode="numeric" value={slots} onChange={(event) => setSlots(event.target.value)} aria-label="Places de dev" />
         <Errors messages={errors('dispatcher.slots')} />
       </label>
       <label className="flex flex-wrap items-center gap-2">
-        <span className="w-40 text-slate-300">Places de test</span>
+        <span className="w-40 text-ink-soft">Places de test</span>
         <input
           className={INPUT}
           inputMode="numeric"
@@ -131,7 +132,7 @@ export function BudgetSettingsForm({ settings }: { settings: BudgetSettings }) {
         <Errors messages={errors('dispatcher.test_slots')} />
       </label>
       <fieldset className="flex flex-col gap-1">
-        <legend className="mb-1 text-xs text-slate-400">Mode nuit</legend>
+        <legend className="mb-1 text-xs text-ink-muted">Mode nuit</legend>
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={night.enabled} onChange={(event) => patchNight({ enabled: event.target.checked })} />
           Mode nuit (runs lourds dans la fenêtre de nuit)
@@ -166,7 +167,7 @@ export function BudgetSettingsForm({ settings }: { settings: BudgetSettings }) {
         <Errors messages={errors('dispatcher.stop_at_7d_percent')} />
       </label>
       <div className="flex items-center gap-3">
-        <button type="submit" className="rounded bg-sky-600 px-3 py-1 font-medium text-white hover:bg-sky-500 disabled:opacity-50" disabled={save.isPending}>
+        <button type="submit" className="rounded bg-accent-strong px-3 py-1.5 font-medium text-white hover:bg-accent disabled:opacity-50" disabled={save.isPending}>
           Enregistrer
         </button>
         <SaveStatus error={save.error} saved={save.data} />

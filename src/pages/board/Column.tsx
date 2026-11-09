@@ -1,13 +1,14 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { memo, useRef } from 'react'
-import type { QueueEntry, Ticket } from '../../api/types'
+import type { ColumnId, QueueEntry, Ticket } from '../../api/types'
+import { DOT_TONE } from '../../components/ui/classes'
+import { COLUMN_TONE } from './columns'
 import { TicketCard } from './TicketCard'
 
 /** Above this many cards a column renders only the visible ones. */
 export const VIRTUALIZE_ABOVE = 50
 const CARD_ESTIMATE_PX = 84
 const OVERSCAN = 6
-const COLUMN_MAX_HEIGHT = 'calc(100vh - 12rem)'
 
 function VirtualCards({ tickets, queue }: { tickets: readonly Ticket[]; queue: readonly QueueEntry[] }) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -21,7 +22,7 @@ function VirtualCards({ tickets, queue }: { tickets: readonly Ticket[]; queue: r
     getItemKey: (index) => tickets[index]?.key ?? index,
   })
   return (
-    <div ref={scrollRef} className="overflow-auto" style={{ maxHeight: COLUMN_MAX_HEIGHT }} data-testid="virtual-list">
+    <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto p-1.5" data-testid="virtual-list">
       <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
         {virtualizer.getVirtualItems().map((item) => {
           const ticket = tickets[item.index]
@@ -44,25 +45,33 @@ function VirtualCards({ tickets, queue }: { tickets: readonly Ticket[]; queue: r
 }
 
 interface ColumnProps {
+  id: ColumnId
   label: string
   tickets: readonly Ticket[]
   queue: readonly QueueEntry[]
 }
 
-export const Column = memo(function Column({ label, tickets, queue }: ColumnProps) {
+/** One state of the board: a tinted header with the count, then the cards (virtualised when many). */
+export const Column = memo(function Column({ id, label, tickets, queue }: ColumnProps) {
+  const empty = tickets.length === 0
   return (
-    <section className="flex w-full shrink-0 snap-start flex-col md:w-72" aria-label={label}>
-      <h2 className="mb-2 flex items-center justify-between px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+    <section
+      className={`flex min-h-0 w-full shrink-0 snap-start flex-col rounded-card border bg-panel/70 md:w-72 ${empty ? 'border-dashed border-line' : 'border-line'}`}
+      aria-label={label}
+    >
+      <h2 className="flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-ink">
+        <span aria-hidden="true" className={`size-2 rounded-full ${DOT_TONE[COLUMN_TONE[id]]}`} />
         {label}
-        <span className="rounded bg-slate-800 px-1.5 text-slate-300 tabular-nums">{tickets.length}</span>
+        <span className={`ml-auto rounded-full px-1.5 text-[0.6875rem] tabular-nums ${empty ? 'text-ink-faint' : 'bg-raised text-ink-muted'}`}>{tickets.length}</span>
       </h2>
       {tickets.length > VIRTUALIZE_ABOVE ? (
         <VirtualCards tickets={tickets} queue={queue} />
       ) : (
-        <div className="flex flex-col gap-2 overflow-auto" style={{ maxHeight: COLUMN_MAX_HEIGHT }}>
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto p-1.5 pt-0">
           {tickets.map((ticket) => (
             <TicketCard key={ticket.key} ticket={ticket} queue={queue} />
           ))}
+          {empty ? <p className="py-6 text-center text-xs text-ink-faint">Aucun ticket</p> : null}
         </div>
       )}
     </section>

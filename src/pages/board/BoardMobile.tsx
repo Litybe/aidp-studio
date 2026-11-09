@@ -31,7 +31,7 @@ const CARD_PX = 60
 const ROW_ESTIMATE_PX = CARD_PX + 8
 const OVERSCAN = 8
 const PILL = 'inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-3 text-sm whitespace-nowrap'
-const PILL_OFF = 'border-slate-700 text-slate-300'
+const PILL_OFF = 'border-line-strong text-ink-soft'
 const PILL_ON = 'border-sky-600 bg-sky-900/50 text-sky-100'
 const ROUTES: readonly (TicketRoute | '')[] = ['', 'code', 'art', 'map', 'doc']
 const TOUCH = 'inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded px-3 text-sm'
@@ -78,24 +78,24 @@ const MobileCard = memo(function MobileCard({ ticket, onMenu }: { ticket: Ticket
   const step = flow?.stepId ?? flow?.phase ?? null
   return (
     <article
-      className="flex h-15 items-center rounded border border-slate-800 bg-slate-900 pl-3"
+      className="flex h-15 items-center rounded-card border border-line bg-card pl-3"
       data-testid={`card-${ticket.key}`}
     >
       <Link to="/issue/$key" params={{ key: ticket.key }} className="flex min-h-11 min-w-0 flex-1 flex-col justify-center">
-        <span className="truncate text-slate-100">
-          <span className="font-mono text-xs text-slate-400">{ticketNumber(ticket)}</span> {ticket.summary}
+        <span className="truncate text-ink">
+          <span className="font-mono text-xs text-ink-muted">{ticketNumber(ticket)}</span> {ticket.summary}
         </span>
-        <span className="flex items-center gap-x-2 truncate text-xs text-slate-500">
+        <span className="flex items-center gap-x-2 truncate text-xs text-ink-faint">
           <span>{route.label}</span>
           {reason ? <span className="truncate text-amber-400">{reason}</span> : null}
-          {!reason && step ? <span className="truncate text-slate-300">{step}</span> : null}
+          {!reason && step ? <span className="truncate text-ink-soft">{step}</span> : null}
           {!reason && flow?.startedAt && ACTIVE_FLOW.has(flow.status) ? <ElapsedLabel startedAt={flow.startedAt} /> : null}
         </span>
       </Link>
       <PrimaryAction ticket={ticket} />
       <button
         type="button"
-        className={`${TOUCH} text-slate-400`}
+        className={`${TOUCH} text-ink-muted`}
         aria-label={`Actions ${ticketNumber(ticket)}`}
         onClick={() => onMenu(ticket)}
       >
@@ -139,7 +139,7 @@ function VirtualList({ tickets, onMenu }: { tickets: readonly Ticket[]; onMenu: 
   )
 }
 
-const FIELD = 'w-full rounded border border-slate-700 bg-slate-950 px-2 text-sm text-slate-200'
+const FIELD = 'w-full rounded border border-line-strong bg-canvas px-2 text-sm text-ink'
 
 interface FiltersSheetProps {
   filters: Filters
@@ -152,7 +152,7 @@ function FiltersSheet({ filters, options, onChange, onClose }: FiltersSheetProps
   return (
     <BottomSheet title="Filtres" onClose={onClose}>
       <div className="flex flex-col gap-3">
-        <label className="flex flex-col gap-1 text-xs text-slate-400">
+        <label className="flex flex-col gap-1 text-xs text-ink-muted">
           Recherche
           <input
             type="search"
@@ -162,7 +162,7 @@ function FiltersSheet({ filters, options, onChange, onClose }: FiltersSheetProps
             onChange={(event) => onChange({ query: event.target.value })}
           />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-slate-400">
+        <label className="flex flex-col gap-1 text-xs text-ink-muted">
           Milestone
           <select className={FIELD} value={filters.milestone} onChange={(event) => onChange({ milestone: event.target.value })}>
             <option value="">Tous les milestones</option>
@@ -173,7 +173,7 @@ function FiltersSheet({ filters, options, onChange, onClose }: FiltersSheetProps
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-xs text-slate-400">
+        <label className="flex flex-col gap-1 text-xs text-ink-muted">
           Label
           <select className={FIELD} value={filters.label} onChange={(event) => onChange({ label: event.target.value })}>
             <option value="">Tous les labels</option>
@@ -187,7 +187,7 @@ function FiltersSheet({ filters, options, onChange, onClose }: FiltersSheetProps
         <div className="flex gap-2">
           <button
             type="button"
-            className="flex-1 rounded border border-slate-700 text-slate-300"
+            className="flex-1 rounded border border-line-strong text-ink-soft"
             onClick={() => onChange({ milestone: '', label: '', query: '' })}
           >
             Effacer
@@ -224,7 +224,7 @@ export default function BoardMobile() {
   return (
     <section className="flex h-full flex-col gap-2">
       <h1 className="sr-only">Board</h1>
-      <div className="-mx-3 -mt-3 flex shrink-0 flex-col gap-1 border-b border-slate-800 bg-slate-950 px-3 pt-2 pb-2">
+      <div className="-mx-3 -mt-3 flex shrink-0 flex-col gap-1 border-b border-line bg-canvas px-3 pt-2 pb-2">
         <div className="flex items-center gap-2">
           <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto" role="group" aria-label="Route">
             {ROUTES.map((route) => (
@@ -242,7 +242,7 @@ export default function BoardMobile() {
           <button type="button" className={`${PILL} ${filterCount ? PILL_ON : PILL_OFF}`} onClick={() => setSheet('filters')}>
             Filtres{filterCount ? ` ${filterCount}` : ''}
           </button>
-          <button type="button" className={`${TOUCH} text-slate-300`} aria-label="Actions du board" onClick={() => setSheet('menu')}>
+          <button type="button" className={`${TOUCH} text-ink-soft`} aria-label="Actions du board" onClick={() => setSheet('menu')}>
             ⋯
           </button>
         </div>
@@ -260,8 +260,8 @@ export default function BoardMobile() {
           ))}
         </div>
       </div>
-      {tickets.isPending ? <p className="text-slate-500">Chargement…</p> : null}
-      {tickets.isError ? <p className="text-red-400">Tickets illisibles : {tickets.error.message}</p> : null}
+      {tickets.isPending ? <p className="text-ink-faint">Chargement…</p> : null}
+      {tickets.isError ? <p className="text-rose-400">Tickets illisibles : {tickets.error.message}</p> : null}
       {data ? (
         list.length > VIRTUALIZE_ABOVE ? (
           <VirtualList key={active} tickets={list} onMenu={setCardMenu} />
@@ -270,7 +270,7 @@ export default function BoardMobile() {
             {list.map((ticket) => (
               <MobileCard key={ticket.key} ticket={ticket} onMenu={setCardMenu} />
             ))}
-            {list.length === 0 ? <p className="px-1 text-slate-500">Aucun ticket.</p> : null}
+            {list.length === 0 ? <p className="px-1 text-ink-faint">Aucun ticket.</p> : null}
           </div>
         )
       ) : null}

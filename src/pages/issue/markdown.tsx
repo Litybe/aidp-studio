@@ -10,7 +10,7 @@ export function renderInline(text: string): ReactNode[] {
   return text.split(INLINE).map((part, index) => {
     if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
       return (
-        <code key={index} className="rounded bg-slate-800 px-1 font-mono text-xs">
+        <code key={index} className="rounded bg-raised px-1 font-mono text-xs">
           {part.slice(1, -1)}
         </code>
       )
@@ -20,7 +20,7 @@ export function renderInline(text: string): ReactNode[] {
     const link = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/.exec(part)
     if (link) {
       return (
-        <a key={index} href={link[2]} target="_blank" rel="noreferrer noopener" className="text-sky-400 underline">
+        <a key={index} href={link[2]} target="_blank" rel="noreferrer noopener" className="text-accent underline">
           {link[1]}
         </a>
       )
@@ -102,21 +102,21 @@ const HEADING = ['text-lg', 'text-base', 'text-sm', 'text-sm', 'text-xs', 'text-
 
 export function Markdown({ source }: { source: string }) {
   if (source.length > MARKDOWN_MAX_CHARS) {
-    return <pre className="overflow-auto whitespace-pre-wrap text-xs text-slate-300">{source.slice(0, MARKDOWN_MAX_CHARS)}</pre>
+    return <pre className="overflow-auto whitespace-pre-wrap text-xs text-ink-soft">{source.slice(0, MARKDOWN_MAX_CHARS)}</pre>
   }
   return (
-    <div className="space-y-2 text-sm text-slate-300">
+    <div className="space-y-2 text-sm text-ink-soft">
       {parseMarkdown(source).map((block, index) => {
         switch (block.type) {
           case 'heading':
             return (
-              <p key={index} role="heading" aria-level={block.level} className={`${HEADING[block.level - 1]} mt-3 font-semibold text-slate-100`}>
+              <p key={index} role="heading" aria-level={block.level} className={`${HEADING[block.level - 1]} mt-3 font-semibold text-ink`}>
                 {renderInline(block.text)}
               </p>
             )
           case 'code':
             return (
-              <pre key={index} className="overflow-auto rounded bg-slate-900 p-2 font-mono text-xs">
+              <pre key={index} className="overflow-auto rounded bg-card p-2 font-mono text-xs">
                 {block.text}
               </pre>
             )
@@ -132,7 +132,7 @@ export function Markdown({ source }: { source: string }) {
           }
           case 'quote':
             return (
-              <blockquote key={index} className="border-l-2 border-slate-700 pl-3 text-slate-400">
+              <blockquote key={index} className="border-l-2 border-line-strong pl-3 text-ink-muted">
                 {renderInline(block.text)}
               </blockquote>
             )

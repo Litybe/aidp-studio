@@ -12,13 +12,13 @@ const PHASE: Record<ConnectionPhase, { tone: DotTone; label: string }> = {
 const selectPhase = (state: ConnectionState) => state.phase
 
 /** State of the SSE stream to the daemon: the realtime link and the daemon's health in one dot. */
-export function DaemonIndicator() {
+export function DaemonIndicator({ className = '' }: { className?: string }) {
   const phase = useConnection(selectPhase)
   const { tone, label } = PHASE[phase]
   return (
-    <span className="flex items-center gap-1.5" data-testid="daemon-indicator" data-phase={phase}>
+    <span className={`flex items-center gap-2 ${className}`} data-testid="daemon-indicator" data-phase={phase}>
       <StatusDot tone={tone} />
-      <span className="text-slate-300">{label}</span>
+      <span className="truncate text-ink-muted">{label}</span>
     </span>
   )
 }

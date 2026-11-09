@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { apiPost, routes, useApiAction } from '../../api/actions'
 import type { FlowRun } from '../../api/types'
 import { ActionButton, FeedbackLine } from '../../components/ActionControls'
+import { BUTTON, INPUT, SELECT } from '../../components/ui/classes'
 
 const ACTIVE = new Set(['running', 'pausing', 'waiting_human', 'waiting_external'])
 const RETRYABLE = new Set(['failed', 'escalated'])
@@ -12,7 +13,7 @@ function ManualForm({ flowKey }: { flowKey: string }) {
   const manual = useApiAction((body: unknown) => apiPost(routes.flowManual(flowKey), body))
   return (
     <form
-      className="flex flex-wrap items-center gap-2"
+      className="flex flex-wrap items-center gap-2 border-t border-line pt-3"
       onSubmit={(event) => {
         event.preventDefault()
         if (name.trim() !== '') manual.run({ [mode]: name.trim() })
@@ -20,7 +21,7 @@ function ManualForm({ flowKey }: { flowKey: string }) {
     >
       <select
         aria-label="Type de lancement manuel"
-        className="rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-xs text-slate-200"
+        className={`${SELECT} py-1 text-xs`}
         value={mode}
         onChange={(event) => setMode(event.target.value as 'action' | 'pipeline')}
       >
@@ -29,7 +30,7 @@ function ManualForm({ flowKey }: { flowKey: string }) {
       </select>
       <input
         aria-label="Nom de l'action ou du pipeline"
-        className="rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-xs text-slate-100"
+        className={`${INPUT} py-1 text-xs`}
         value={name}
         onChange={(event) => setName(event.target.value)}
         placeholder="ex. fix-review"
@@ -37,7 +38,7 @@ function ManualForm({ flowKey }: { flowKey: string }) {
       <button
         type="submit"
         disabled={name.trim() === '' || manual.feedback.pending}
-        className="rounded border border-slate-700 px-2 py-0.5 text-xs text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+        className={BUTTON}
       >
         Lancer
       </button>
@@ -60,7 +61,7 @@ export function IssueActions({ flow }: { flow: FlowRun }) {
       <div className="flex flex-wrap items-center gap-2">
         {current && status === 'waiting_human' ? (
           <>
-            <ActionButton label="Approuver" tone="primary" onRun={run(routes.step(flow.key, current, 'approve'))} />
+            <ActionButton label="Approuver" tone="primary" icon="check" onRun={run(routes.step(flow.key, current, 'approve'))} />
             <ActionButton
               label="Rejeter"
               tone="danger"
@@ -69,7 +70,7 @@ export function IssueActions({ flow }: { flow: FlowRun }) {
             />
           </>
         ) : null}
-        {retryId ? <ActionButton label="Relancer l'étape" tone="primary" onRun={run(routes.step(flow.key, retryId, 'retry'))} /> : null}
+        {retryId ? <ActionButton label="Relancer l'étape" tone="primary" icon="refresh" onRun={run(routes.step(flow.key, retryId, 'retry'))} /> : null}
         {current && ACTIVE.has(flow.status) ? (
           <ActionButton
             label="Passer l'étape"
@@ -77,9 +78,9 @@ export function IssueActions({ flow }: { flow: FlowRun }) {
             onRun={run(routes.step(flow.key, current, 'skip'))}
           />
         ) : null}
-        {ACTIVE.has(flow.status) ? <ActionButton label="Pause du flow" onRun={run(routes.flowPause(flow.key))} /> : null}
+        {ACTIVE.has(flow.status) ? <ActionButton label="Pause du flow" icon="pause" onRun={run(routes.flowPause(flow.key))} /> : null}
         {flow.status === 'paused' ? (
-          <ActionButton label="Reprendre le flow" tone="primary" onRun={run(routes.flowResume(flow.key))} />
+          <ActionButton label="Reprendre le flow" tone="primary" icon="play" onRun={run(routes.flowResume(flow.key))} />
         ) : null}
         <FeedbackLine feedback={post.feedback} />
       </div>

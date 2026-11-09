@@ -57,9 +57,9 @@ export function Modal({ title, onClose, children }: ModalProps) {
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="mt-12 w-full max-w-md space-y-3 rounded border border-slate-700 bg-slate-900 p-4 text-sm text-slate-200"
+        className="mt-12 w-full max-w-md space-y-3 rounded-card border border-line-strong bg-card p-4 text-sm text-ink shadow-2xl shadow-black/50"
       >
-        <h2 className="text-base font-semibold text-slate-100">{title}</h2>
+        <h2 className="text-base font-semibold text-ink">{title}</h2>
         {children}
       </div>
     </div>

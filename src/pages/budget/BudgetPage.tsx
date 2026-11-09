@@ -1,3 +1,5 @@
+import { PageHeader } from '../../components/ui/PageHeader'
+import { CARD, H2 } from '../../components/ui/classes'
 import { memo, useState } from 'react'
 import { useDispatcherBudget, useLastRateLimit } from '../../api/queries'
 import type { DispatcherBudget } from '../../api/types'
@@ -20,8 +22,6 @@ import {
   useUsage,
 } from './queries'
 
-const CARD = 'rounded border border-slate-800 bg-slate-900/40 p-4'
-const H2 = 'mb-2 text-sm font-semibold text-slate-100'
 
 const VERDICT_LABEL: Record<string, string> = {
   allow: 'lancements autorisés',
@@ -42,21 +42,21 @@ const GaugesCard = memo(function GaugesCard() {
   return (
     <section className={CARD} aria-label="Fenêtres et verdict">
       <h2 className={H2}>Fenêtres 5 h et 7 j</h2>
-      <div className="flex flex-wrap gap-6">
-        <Gauge label="5h" source={inputs.source} {...inputs.fiveHour} />
-        <Gauge label="7j" source={inputs.source} {...inputs.sevenDay} />
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Gauge label="5h" source={inputs.source} large {...inputs.fiveHour} />
+        <Gauge label="7j" source={inputs.source} large {...inputs.sevenDay} />
       </div>
       {verdict ? (
-        <dl className="mt-3 grid grid-cols-[9rem_1fr] gap-y-0.5">
-          <dt className="text-slate-400">Verdict du dispatcher</dt>
+        <dl className="mt-4 grid grid-cols-[10rem_1fr] gap-y-1 border-t border-line pt-3 text-sm">
+          <dt className="text-ink-muted">Verdict du dispatcher</dt>
           <dd data-testid="verdict">{VERDICT_LABEL[verdict.verdict] ?? verdict.verdict}</dd>
-          <dt className="text-slate-400">Raison</dt>
+          <dt className="text-ink-muted">Raison</dt>
           <dd>{verdict.why || '—'}</dd>
-          <dt className="text-slate-400">Seuils 5h / 7j</dt>
+          <dt className="text-ink-muted">Seuils 5h / 7j</dt>
           <dd>
             {Math.round(verdict.limit5h * 100)}% / {Math.round(verdict.limit7d * 100)}%
           </dd>
-          <dt className="text-slate-400">Lancements max</dt>
+          <dt className="text-ink-muted">Lancements max</dt>
           <dd>{verdict.maxLaunches}</dd>
         </dl>
       ) : null}
@@ -88,10 +88,10 @@ const TopIssues = memo(function TopIssues({ from }: { from: string }) {
         {(usage) => {
           const top = topBuckets(usage.buckets)
           return top.length === 0 ? (
-            <p className="text-xs text-slate-500">aucune donnée</p>
+            <p className="text-xs text-ink-faint">aucune donnée</p>
           ) : (
             <table className="w-full text-left text-xs">
-              <thead className="text-slate-400">
+              <thead className="text-ink-muted">
                 <tr>
                   <th className="font-normal">Issue</th>
                   <th className="text-right font-normal">Tokens</th>
@@ -136,8 +136,8 @@ const PixellabCard = memo(function PixellabCard() {
         {(body) => (
           <p>
             {describeBalance(body.balance)}
-            {body.minReserve != null ? <span className="text-slate-400"> · réserve minimale {body.minReserve}</span> : null}
-            {body.recordedAt ? <span className="text-xs text-slate-500"> · relevé {body.recordedAt}</span> : null}
+            {body.minReserve != null ? <span className="text-ink-muted"> · réserve minimale {body.minReserve}</span> : null}
+            {body.recordedAt ? <span className="text-xs text-ink-faint"> · relevé {body.recordedAt}</span> : null}
           </p>
         )}
       </Async>
@@ -153,7 +153,7 @@ const AnomaliesCard = memo(function AnomaliesCard() {
       <Async query={query} what="Anomalies de coût">
         {(items) =>
           items.length === 0 ? (
-            <p className="text-slate-400">Aucune anomalie.</p>
+            <p className="text-ink-muted">Aucune anomalie.</p>
           ) : (
             <ul className="flex flex-col gap-1 text-xs">
               {items.map((item, index) => (
@@ -186,7 +186,7 @@ export default function BudgetPage() {
   const [from] = useState(() => sinceDate(USAGE_DAYS, Date.now()))
   return (
     <section className="flex max-w-4xl flex-col gap-4">
-      <h1 className="text-lg font-semibold text-slate-100">Budget</h1>
+      <PageHeader title="Budget" />
       <GaugesCard />
       <ChartCard title="Tokens par jour" groupBy="day" from={from} bars={dayItems} />
       <div className="grid gap-4 md:grid-cols-3">

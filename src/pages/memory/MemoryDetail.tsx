@@ -1,11 +1,11 @@
+import { INPUT } from '../../components/ui/classes'
 import { useState } from 'react'
 import { ApiValidationError } from '../../api/send'
 import { MEMORY_KINDS, type Memory, type MemoryKind } from '../../api/types/memory'
 import { formatDateTime } from '../../lib/format'
 import { KIND_LABEL, STATUS_LABEL, useApprove, useArchive, useEditMemory, useMerge } from './queries'
 
-const BUTTON = 'rounded border border-slate-700 px-2 py-1 text-xs hover:bg-slate-800 disabled:opacity-50'
-const INPUT = 'rounded border border-slate-700 bg-slate-950 px-2 py-1'
+const BUTTON = 'rounded border border-line-strong px-2 py-1 text-xs hover:bg-raised disabled:opacity-50'
 
 function ErrorLine({ error }: { error: unknown }) {
   if (!(error instanceof Error)) return null
@@ -41,7 +41,7 @@ function EditForm({ memory, onDone }: { memory: Memory; onDone: () => void }) {
       </select>
       <textarea className={`${INPUT} min-h-24`} value={text} maxLength={600} onChange={(event) => setText(event.target.value)} aria-label="Texte" />
       <div className="flex gap-2">
-        <button type="submit" className="rounded bg-sky-600 px-3 py-1 text-xs font-medium text-white hover:bg-sky-500 disabled:opacity-50" disabled={edit.isPending}>
+        <button type="submit" className="rounded bg-accent-strong px-3 py-1 text-xs font-medium text-white hover:bg-accent disabled:opacity-50" disabled={edit.isPending}>
           Enregistrer
         </button>
         <button type="button" className={BUTTON} onClick={onDone}>
@@ -64,10 +64,10 @@ export function MemoryDetail({ memory }: { memory: Memory }) {
   const canArchive = memory.status !== 'archived' && memory.status !== 'superseded'
   const error = approve.error ?? archive.error ?? merge.error
   return (
-    <section className="flex flex-col gap-3 rounded border border-slate-800 bg-slate-900/40 p-4" aria-label="Détail de la mémoire">
+    <section className="flex flex-col gap-3 rounded-card border border-line bg-card p-4" aria-label="Détail de la mémoire">
       <header>
-        <h2 className="text-sm font-semibold text-slate-100">{memory.title}</h2>
-        <p className="text-xs text-slate-400">
+        <h2 className="text-sm font-semibold text-ink">{memory.title}</h2>
+        <p className="text-xs text-ink-muted">
           {memory.id} · {KIND_LABEL[memory.kind] ?? memory.kind} · {STATUS_LABEL[memory.status] ?? memory.status}
           {memory.uses !== undefined ? ` · ${memory.uses} usages` : ''}
           {memory.lastUsedAt ? ` · dernier ${formatDateTime(memory.lastUsedAt)}` : ''}
@@ -77,35 +77,35 @@ export function MemoryDetail({ memory }: { memory: Memory }) {
         <EditForm key={memory.id} memory={memory} onDone={() => setEditing(false)} />
       ) : (
         <>
-          <p className="whitespace-pre-wrap text-slate-200">{memory.text}</p>
+          <p className="whitespace-pre-wrap text-ink">{memory.text}</p>
           <dl className="grid grid-cols-[6rem_1fr] gap-y-0.5 text-xs">
             {memory.scope?.route ? (
               <>
-                <dt className="text-slate-400">Route</dt>
+                <dt className="text-ink-muted">Route</dt>
                 <dd>{memory.scope.route}</dd>
               </>
             ) : null}
             {memory.scope?.paths?.length ? (
               <>
-                <dt className="text-slate-400">Chemins</dt>
+                <dt className="text-ink-muted">Chemins</dt>
                 <dd className="break-all">{memory.scope.paths.join(', ')}</dd>
               </>
             ) : null}
             {memory.scope?.tags?.length ? (
               <>
-                <dt className="text-slate-400">Tags</dt>
+                <dt className="text-ink-muted">Tags</dt>
                 <dd>{memory.scope.tags.join(', ')}</dd>
               </>
             ) : null}
             {memory.refs?.length ? (
               <>
-                <dt className="text-slate-400">Références</dt>
+                <dt className="text-ink-muted">Références</dt>
                 <dd>{memory.refs.map((ref) => `${ref.type} ${ref.id}`).join(', ')}</dd>
               </>
             ) : null}
             {memory.supersedes ? (
               <>
-                <dt className="text-slate-400">Remplace</dt>
+                <dt className="text-ink-muted">Remplace</dt>
                 <dd>{memory.supersedes}</dd>
               </>
             ) : null}
