@@ -7,6 +7,8 @@ import { useTicker } from '../../realtime/context'
 import { isHumanStep, type Job, type JobStep } from './flowJobs'
 import { sessionOfStep } from './flowTimeline'
 import { SessionPanel } from './SessionPanel'
+import { StepActions } from './Unblock'
+import { isStepUnblockable } from './unblockState'
 
 /** Longest value or output shown in a step; the full text stays on the daemon. */
 const MAX_VALUE_CHARS = 800
@@ -118,6 +120,11 @@ const Row = memo(function Row({ step, flow, open, current, onToggle }: RowProps)
           <Duration start={step.state?.started_at} end={step.state?.finished_at} />
         </span>
       </button>
+      {isStepUnblockable(flow.status, step.status) ? (
+        <div className="px-3 pb-2 pl-9">
+          <StepActions flowKey={flow.key} stepId={step.id} />
+        </div>
+      ) : null}
       {open ? <Detail step={step} flow={flow} /> : null}
     </li>
   )

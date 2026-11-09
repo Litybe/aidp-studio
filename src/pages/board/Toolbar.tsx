@@ -10,6 +10,7 @@ export function Toolbar({ withNewRun = false }: { withNewRun?: boolean }) {
   const paused = useDispatcherBudget(selectPaused).data === true
   const sync = useApiAction(() => apiPost(routes.ticketsSync))
   const dispatcher = useApiAction((verb: 'pause' | 'resume') => apiPost(routes.dispatcher(verb)))
+  const tick = useApiAction(() => apiPost(routes.dispatcherTick))
   return (
     <div className="flex flex-wrap items-center gap-2">
       <ActionButton label="Sync GitHub" icon="github" onRun={() => sync.run()} />
@@ -19,9 +20,11 @@ export function Toolbar({ withNewRun = false }: { withNewRun?: boolean }) {
         tone={paused ? 'primary' : 'neutral'}
         onRun={() => dispatcher.run(paused ? 'resume' : 'pause')}
       />
+      <ActionButton label="Lancer un passage" icon="refresh" onRun={() => tick.run()} />
       {withNewRun ? <NewRunButton /> : null}
       <FeedbackLine feedback={sync.feedback} />
       <FeedbackLine feedback={dispatcher.feedback} />
+      <FeedbackLine feedback={tick.feedback} />
     </div>
   )
 }

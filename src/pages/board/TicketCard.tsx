@@ -12,6 +12,7 @@ import { Pill } from '../../components/ui/Pill'
 import { elapsedLabel, formatTokens, formatUsd } from '../../lib/format'
 import { useTicker } from '../../realtime/context'
 import { blockedReason, canSendToTest, columnOf, displayTitle, routeOf, ticketNumber } from './columns'
+import { RecoveryButtons, factsOfSummary } from '../issue/Unblock'
 import { RouteBadge } from './RouteBadge'
 import { ticketIconStatus } from './ticketStatus'
 
@@ -113,7 +114,7 @@ export function CardActions({ ticket, queue }: CardProps) {
         />
       ) : null}
       {flowActive && flow ? <ActionButton label="Pause du flow" icon="pause" onRun={send(routes.flowPause(flow.flowKey))} /> : null}
-      {flow?.status === 'paused' ? (
+      {flow?.status === 'paused' || flow?.status === 'pausing' ? (
         <ActionButton label="Reprendre le flow" tone="primary" icon="play" onRun={send(routes.flowResume(flow.flowKey))} />
       ) : null}
       {flowActive && flow?.stepId ? (
@@ -123,6 +124,10 @@ export function CardActions({ ticket, queue }: CardProps) {
           onRun={send(routes.step(flow.flowKey, flow.stepId, 'skip'))}
         />
       ) : null}
+      {flow && flow.stepId && (flow.status === 'failed' || flow.status === 'escalated') ? (
+        <ActionButton label="Relancer l'étape" tone="primary" icon="refresh" onRun={send(routes.step(flow.flowKey, flow.stepId, 'retry'))} />
+      ) : null}
+      <RecoveryButtons ticket={ticket} flow={factsOfSummary(ticket)} stuck={false} />
       {column !== 'done' ? (
         <ActionButton
           label="Annuler"

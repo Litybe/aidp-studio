@@ -3,10 +3,13 @@ import type { ActionFeedback } from '../api/actions'
 import { BUTTON, BUTTON_DANGER, BUTTON_SOFT } from './ui/classes'
 import { Icon, type IconName } from './ui/Icon'
 
+/** Phone: at least 40 px tall, whatever the tone. */
+const TOUCH = 'max-sm:min-h-10'
+
 const TONES = {
-  neutral: BUTTON,
-  primary: BUTTON_SOFT,
-  danger: BUTTON_DANGER,
+  neutral: `${BUTTON} ${TOUCH}`,
+  primary: `${BUTTON_SOFT} ${TOUCH}`,
+  danger: `${BUTTON_DANGER} ${TOUCH}`,
 } as const
 
 export type Tone = keyof typeof TONES

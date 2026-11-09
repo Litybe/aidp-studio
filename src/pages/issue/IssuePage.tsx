@@ -16,6 +16,7 @@ import { ticketIconStatus } from '../board/ticketStatus'
 import { costLabel, FLOW_PILL } from '../board/TicketCard'
 import { DoctorPanel } from './DoctorPanel'
 import { IssueActions } from './IssueActions'
+import { UnblockBlock } from './Unblock'
 import { ArtifactsTab, AssumptionsTab, JournalTab, ProofsTab } from './tabs'
 import { Duration } from './StepList'
 import { GateCard, Timeline } from './Timeline'
@@ -46,6 +47,8 @@ function Header({
   const prNumber = pr?.number ?? flowPr?.number
   const prUrl = pr?.url ?? flowPr?.url ?? undefined
   const total = costLabel(cost)
+  const prRepo = pr?.repo ?? flowPr?.repository ?? ''
+  const updatable = prNumber !== undefined && prRepo !== '' && !/merged|closed/i.test(pr?.state ?? '')
   const lane = ticket.phase === 'to-test' || ticket.phase === 'testing' ? 'test' : ticket.phase === 'dev' ? 'dev' : null
   const status = flow ? flowIconStatus(flow.status) : ticketIconStatus(ticket)
   const column = columnOf(ticket)
@@ -120,7 +123,14 @@ function Header({
           </span>
         ) : null}
       </div>
-      {flow ? <IssueActions flow={flow} /> : null}
+      <UnblockBlock ticket={ticket} flow={flow} />
+      {flow ? (
+        <IssueActions
+          flow={flow}
+          ticket={ticket}
+          pr={updatable ? { repo: prRepo, number: prNumber } : null}
+        />
+      ) : null}
     </header>
   )
 }

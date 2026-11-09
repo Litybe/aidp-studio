@@ -92,10 +92,13 @@ export const routes = {
   ticketsSync: '/tickets/sync?source=github',
   flowPause: (key: string) => `/flows/${seg(key)}/pause`,
   flowResume: (key: string) => `/flows/${seg(key)}/resume`,
+  flowAbort: (key: string) => `/flows/${seg(key)}/abort`,
   flowManual: (key: string) => `/flows/${seg(key)}/manual`,
   step: (key: string, stepId: string, verb: 'retry' | 'skip' | 'approve' | 'reject') =>
     `/flows/${seg(key)}/steps/${seg(stepId)}/${verb}`,
   dispatcher: (verb: 'pause' | 'resume') => `/dispatcher/${verb}`,
+  dispatcherTick: '/dispatcher/tick',
+  prUpdateBranch: '/prs/update-branch',
   queuePromote: (id: string) => `/queue/${seg(id)}/promote`,
   sessionReply: (id: string) => `/sessions/${seg(id)}/reply`,
 }
