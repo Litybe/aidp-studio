@@ -145,4 +145,45 @@ describe('IssuePage', () => {
     expect(await screen.findByText('étape')).toBeInTheDocument()
     expect(screen.getByText('un').tagName).toBe('STRONG')
   })
+
+  it('shows the doctor section with cause, action and result', async () => {
+    mockApi({
+      ...ROUTES,
+      'GET /flows/GH-12/doctor': {
+        body: {
+          key: 'GH-12',
+          enabled: true,
+          incidents: [
+            {
+              id: 'GH-12/implement@0',
+              key: 'GH-12',
+              ticket: 'GH-12',
+              trigger: 'flow_failed',
+              step: 'implement',
+              detail: 'implement failed',
+              status: 'fixed',
+              detectedAt: '2026-11-09T10:00:00Z',
+              updatedAt: '2026-11-09T10:05:00Z',
+              diagnosis: { category: 'false_failure', cause: 'faux échec du report', confidence: 0.85, action: 'retry_step', needs_human: false, summary: '' },
+              outcome: { action: 'retry_step', idempotencyKey: 'GH-12/implement@0:action', ok: true, detail: 'retried `implement`', at: '2026-11-09T10:05:00Z' },
+              note: 'retry_step : retried `implement`',
+              commented: true,
+            },
+          ],
+        },
+      },
+    })
+    render12()
+    const section = await screen.findByRole('region', { name: 'Docteur' })
+    expect(within(section).getByText('corrigé')).toBeInTheDocument()
+    expect(within(section).getByText('faux échec du report')).toBeInTheDocument()
+    expect(within(section).getByText(/confiance 85 %/)).toBeInTheDocument()
+  })
+
+  it('hides the doctor section when the daemon has no incident or no route', async () => {
+    mockApi(ROUTES)
+    render12()
+    expect(await screen.findByRole('heading', { level: 1 })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Docteur' })).toBeNull()
+  })
 })
