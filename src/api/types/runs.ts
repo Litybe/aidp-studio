@@ -20,8 +20,33 @@ export interface Assumption {
   autoAnswered?: boolean
 }
 
+/** One row of a native run: a stage, or a plan task or shard named `<stage>#<id>`. */
+export interface RunStage {
+  name: string
+  /** `pending`, `running`, `done`, `failed`, `skipped` or `cancelled`. */
+  status: string
+  reason?: string | null
+  attempts?: number
+  resumed?: boolean
+  sessionIds?: string[]
+  startedAt?: string | null
+  finishedAt?: string | null
+  costUsd?: number | null
+  signals?: unknown
+}
+
+/** `GET /api/runs/:id`: the native run (pipeline) with its stages. */
 export interface RunDetail {
+  runId?: string
+  /** Id of the pipeline template the run executes. */
+  templateId?: string
+  /** `pending`, `running`, `waiting_gate`, `paused`, `done`, `failed` or `cancelled`. */
   status?: string
+  reason?: string | null
+  pendingGate?: string | null
+  startedAt?: string | null
+  endedAt?: string | null
+  stages?: RunStage[]
   autonomous?: boolean
   assumptions?: Assumption[]
 }

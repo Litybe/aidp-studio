@@ -97,6 +97,38 @@ describe('IssuePage', () => {
     expect(within(phase).getByText('itération 2')).toBeInTheDocument()
   })
 
+  it('shows the pipeline of a step with its phases', async () => {
+    mockApi({
+      ...ROUTES,
+      'GET /runs/run-b': {
+        body: {
+          runId: 'run-b',
+          templateId: 'dev-unity',
+          status: 'failed',
+          startedAt: '2026-11-06T10:05:00Z',
+          endedAt: '2026-11-06T11:10:00Z',
+          stages: [
+            { name: 'plan', status: 'done', attempts: 1, costUsd: 0.5, startedAt: '2026-11-06T10:05:00Z', finishedAt: '2026-11-06T10:20:00Z' },
+            { name: 'implement', status: 'failed', attempts: 2, reason: 'compilation Unity en échec', costUsd: 1.25 },
+            { name: 'playtest', status: 'pending' },
+          ],
+        },
+      },
+    })
+    render12()
+    fireEvent.click(within(await screen.findByRole('complementary')).getByRole('button', { name: /realisation/ }))
+    const phase = screen.getByRole('region', { name: 'Phase realisation' })
+    expect(await within(phase).findByText('dev-unity · 1/3')).toBeInTheDocument()
+    fireEvent.click(within(phase).getByRole('button', { name: /implement/ }))
+    const pipeline = await within(phase).findByRole('region', { name: 'Pipeline dev-unity' })
+    expect(within(pipeline).getByText('1/3 phases')).toBeInTheDocument()
+    expect(within(pipeline).getByText('playtest')).toBeInTheDocument()
+    expect(within(pipeline).getByText('2 tentatives')).toBeInTheDocument()
+    // The failed phase is open at once, with its reason.
+    expect(within(pipeline).getByText('compilation Unity en échec')).toBeInTheDocument()
+    expect(within(pipeline).getByText(/1,75/)).toBeInTheDocument()
+  })
+
   it('approves the gate at once and asks before rejecting', async () => {
     const calls = mockApi({
       ...ROUTES,
