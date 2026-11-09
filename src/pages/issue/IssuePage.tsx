@@ -14,6 +14,7 @@ import { COLUMN_TONE, COLUMNS, columnOf, routeOf, ticketNumber } from '../board/
 import { RouteBadge } from '../board/RouteBadge'
 import { ticketIconStatus } from '../board/ticketStatus'
 import { costLabel, FLOW_PILL } from '../board/TicketCard'
+import { DoctorPanel } from './DoctorPanel'
 import { IssueActions } from './IssueActions'
 import { ArtifactsTab, AssumptionsTab, JournalTab, ProofsTab } from './tabs'
 import { Duration } from './StepList'
@@ -129,6 +130,7 @@ function FlowDetails({ flow, runIds, showGate }: { flow: FlowRun; runIds: readon
   return (
     <>
       <Timeline key={flow.key} flow={flow} showGate={showGate} />
+      <DoctorPanel flowKey={flow.key} />
       <div>
         <div role="tablist" className="mb-3 inline-flex max-w-full overflow-x-auto rounded-md border border-line bg-canvas p-0.5">
           {TABS.map((entry) => (

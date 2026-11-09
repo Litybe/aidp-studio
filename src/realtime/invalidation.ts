@@ -39,6 +39,7 @@ export const INVALIDATION_RULES: readonly InvalidationRule[] = [
   { type: 'flow.*', keys: always(queryKeys.tickets) }, // F1: `flowSummary` of the board cards
   { type: 'flow.waiting_you', keys: always(queryKeys.inbox) },
   { type: 'flow.ended', keys: always(queryKeys.inbox, queryKeys.tickets) },
+  { type: 'doctor.incident', keys: flowOf },
   { type: 'ticket.*', keys: always(queryKeys.tickets) },
   { type: 'ticket.status', keys: flowOf },
   { type: 'gateway.rate_limit', keys: always(queryKeys.budget, queryKeys.gatewayStatus) },

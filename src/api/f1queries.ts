@@ -3,6 +3,7 @@ import { isNotFound } from './actions'
 import { apiGet } from './client'
 import { countInbox, queryKeys } from './queries'
 import type {
+  FlowDoctor,
   FlowRun,
   InboxEntry,
   JournalLine,
@@ -23,6 +24,7 @@ export const f1Keys = {
   cost: (key: string) => [...queryKeys.tickets, 'cost', key] as const,
   pr: (key: string) => [...queryKeys.tickets, 'pr', key] as const,
   journal: (key: string) => [...queryKeys.flow(key), 'journal'] as const,
+  doctor: (key: string) => [...queryKeys.flow(key), 'doctor'] as const,
   queue: [...queryKeys.queue, 'list'] as const,
   runFiles: (id: string) => [...queryKeys.runs, 'files', id] as const,
   runFile: (id: string, path: string) => [...queryKeys.runs, 'file', id, path] as const,
@@ -67,6 +69,15 @@ export function useJournal(key: string, enabled: boolean) {
       return Array.isArray(body) ? body : body.entries
     },
     enabled,
+    ...NO_RETRY,
+  })
+}
+
+/** Incidents of the pipeline doctor; a daemon without the route (404, 503) settles at once. */
+export function useFlowDoctor(key: string) {
+  return useQuery({
+    queryKey: f1Keys.doctor(key),
+    queryFn: ({ signal }) => apiGet<FlowDoctor>(`/flows/${encodeURIComponent(key)}/doctor`, signal),
     ...NO_RETRY,
   })
 }
