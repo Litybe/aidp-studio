@@ -69,6 +69,16 @@ export function sessionOfStep(flow: FlowRun, stepId: string | null | undefined):
   return hits.length > 0 ? (hits[hits.length - 1]?.[1] ?? null) : null
 }
 
+/** Every distinct run id the step started (one per iteration), oldest first. */
+export function runsOfStep(flow: FlowRun, stepId: string): string[] {
+  if (!flow.sessions) return []
+  const prefix = `${stepId}:`
+  const ids = Object.entries(flow.sessions)
+    .filter(([effect]) => effect.startsWith(prefix))
+    .map(([, id]) => id)
+  return [...new Set(ids)]
+}
+
 /** Every distinct run id the flow started, oldest first. */
 export function runIdsOf(flow: FlowRun | undefined): string[] {
   return flow?.sessions ? [...new Set(Object.values(flow.sessions))] : []

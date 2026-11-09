@@ -1,22 +1,18 @@
 import { memo } from 'react'
 import type { FlowRun } from '../../api/types'
 import { StatusIcon } from '../../components/StatusIcon'
-import { elapsedLabel, formatDateTime, formatTokens } from '../../lib/format'
+import { formatDateTime, formatTokens } from '../../lib/format'
 import { STEP_LABEL, stepIconStatus } from '../../lib/status'
-import { useTicker } from '../../realtime/context'
+import { Duration } from './Duration'
 import { isHumanStep, type Job, type JobStep } from './flowJobs'
-import { sessionOfStep } from './flowTimeline'
-import { SessionPanel } from './SessionPanel'
+import { runsOfStep, sessionOfStep } from './flowTimeline'
+import { PipelineBadge, PipelinePanel } from './PipelinePanel'
+
+export { Duration } from './Duration'
 
 /** Longest value or output shown in a step; the full text stays on the daemon. */
 const MAX_VALUE_CHARS = 800
 const MAX_OUTPUTS = 20
-
-export function Duration({ start, end }: { start: string | null | undefined; end: string | null | undefined }) {
-  const running = Boolean(start) && !end
-  const live = useTicker((now) => (running ? elapsedLabel(start, null, now) : ''))
-  return <span className="tabular-nums">{running ? live : elapsedLabel(start, end, 0)}</span>
-}
 
 function show(value: unknown): string {
   const text = typeof value === 'string' ? value : JSON.stringify(value)
@@ -35,9 +31,10 @@ function Detail({ step, flow }: { step: JobStep; flow: FlowRun }) {
     .filter(([key]) => key !== 'warnings' && key !== 'warning')
     .slice(0, MAX_OUTPUTS)
   const warnings = warningsOf(state?.outputs)
-  const session = sessionOfStep(flow, step.id)
+  // Newest run first: one pipeline per iteration of the step.
+  const runs = runsOfStep(flow, step.id).reverse()
   const failed = step.status === 'failed' || step.status === 'escalated'
-  const empty = !state?.reason && !state?.detail && outputs.length === 0 && warnings.length === 0 && !session && !state?.started_at
+  const empty = !state?.reason && !state?.detail && outputs.length === 0 && warnings.length === 0 && runs.length === 0 && !state?.started_at
   return (
     <div className="space-y-2 border-t border-line bg-canvas px-3 py-2 pl-9 font-mono text-xs">
       {state?.reason ? <p className="text-st-running">{state.reason}</p> : null}
@@ -66,11 +63,9 @@ function Detail({ step, flow }: { step: JobStep; flow: FlowRun }) {
         </p>
       ) : null}
       {empty ? <p className="text-ink-faint">{step.status === 'pending' ? 'Pas encore exécutée.' : 'Aucun détail.'}</p> : null}
-      {session ? (
-        <div className="font-sans">
-          <SessionPanel sessionId={session} />
-        </div>
-      ) : null}
+      {runs.map((runId) => (
+        <PipelinePanel key={runId} runId={runId} />
+      ))}
     </div>
   )
 }
@@ -95,6 +90,7 @@ const Row = memo(function Row({ step, flow, open, current, onToggle }: RowProps)
   const human = isHumanStep(step) && step.status !== 'done' && step.status !== 'skipped'
   const showIteration = step.iteration > 1 || (step.children > 0 && step.iteration > 0)
   const label = step.status === 'done' || step.status === 'pending' ? '' : (STEP_LABEL[step.status] ?? step.status)
+  const run = sessionOfStep(flow, step.id)
   return (
     <li
       className={`border-b border-line last:border-b-0 ${step.parent ? 'ml-4 border-l-2 border-l-line' : ''} ${human ? 'border-l-2 border-l-st-human bg-st-human/10' : ''}`}
@@ -112,6 +108,7 @@ const Row = memo(function Row({ step, flow, open, current, onToggle }: RowProps)
         {step.children > 0 ? <span className="rounded border border-line px-1.5 text-xs text-ink-muted">boucle</span> : null}
         {showIteration ? <span className="rounded bg-raised px-1.5 text-xs text-ink-soft">{`itération ${step.iteration}`}</span> : null}
         {human ? <span className="rounded bg-st-human/20 px-1.5 text-xs text-st-human">validation humaine</span> : null}
+        {run ? <PipelineBadge runId={run} /> : null}
         {label ? <span className="hidden text-xs text-ink-muted sm:inline">{label}</span> : null}
         <span className="ml-auto flex shrink-0 items-center gap-3 text-xs text-ink-muted">
           {step.tokens !== null ? <span className="hidden sm:inline">{formatTokens(step.tokens)}</span> : null}
