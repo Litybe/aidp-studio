@@ -52,13 +52,13 @@ function Header({
   const flowPill = flow ? FLOW_PILL[flow.status] : undefined
   return (
     <header className="space-y-3 rounded-card border border-line bg-card p-4">
-      <Link to="/board" className="inline-flex items-center gap-1 text-xs text-ink-faint hover:text-ink-muted">
+      <Link to="/board" className="-my-2 inline-flex min-h-10 items-center gap-1 text-xs text-ink-faint hover:text-ink-muted">
         <Icon name="chevronLeft" size={12} />
         Board
       </Link>
       <div className="flex flex-wrap items-start gap-3">
         <RouteBadge route={routeOf(ticket)} size="md" />
-        <h1 className="flex min-w-0 flex-1 items-start gap-2 text-xl leading-snug font-semibold tracking-tight text-ink">
+        <h1 className="flex min-w-0 flex-1 basis-60 items-start gap-2 text-xl leading-snug font-semibold tracking-tight text-ink">
           <StatusIcon status={status} size={20} className="mt-1" />
           <span className="min-w-0">
             <span className="font-mono text-base text-ink-faint">{ticketNumber(ticket)}</span> {ticket.summary}
