@@ -11,10 +11,10 @@ const Row = memo(function Row({ memory, selected, onSelect }: { memory: Memory; 
       type="button"
       onClick={() => onSelect(memory.id)}
       aria-pressed={selected}
-      className={`flex h-full w-full flex-col justify-center border-b border-slate-800 px-3 text-left hover:bg-slate-800/60 ${selected ? 'bg-slate-800' : ''}`}
+      className={`flex h-full w-full flex-col justify-center border-b border-line px-3 text-left hover:bg-raised ${selected ? 'bg-raised' : ''}`}
     >
-      <span className="truncate text-slate-100">{memory.title}</span>
-      <span className="flex gap-2 text-xs text-slate-400">
+      <span className="truncate text-ink">{memory.title}</span>
+      <span className="flex gap-2 text-xs text-ink-muted">
         <span>{memory.id}</span>
         <span>{KIND_LABEL[memory.kind] ?? memory.kind}</span>
         <span className={memory.status === 'proposed' ? 'text-amber-300' : undefined}>{STATUS_LABEL[memory.status] ?? memory.status}</span>
@@ -36,9 +36,9 @@ export function MemoryList({ memories, selectedId, onSelect }: { memories: reado
     overscan: 6,
     getItemKey: (index) => memories[index]?.id ?? index,
   })
-  if (memories.length === 0) return <p className="text-xs text-slate-500">aucune mémoire pour ce filtre</p>
+  if (memories.length === 0) return <p className="text-xs text-ink-faint">aucune mémoire pour ce filtre</p>
   return (
-    <div ref={parentRef} className="h-[28rem] overflow-auto rounded border border-slate-800" role="list" aria-label="Mémoires" data-testid="memory-list">
+    <div ref={parentRef} className="h-[28rem] overflow-auto rounded-card border border-line" role="list" aria-label="Mémoires" data-testid="memory-list">
       <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
         {virtualizer.getVirtualItems().map((item) => {
           const memory = memories[item.index]

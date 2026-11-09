@@ -17,9 +17,9 @@ export function isMergePending(flow: FlowRun | undefined): boolean {
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
     <section className="space-y-2" aria-label={title}>
-      <h2 className="flex flex-wrap items-baseline gap-x-2 text-base font-semibold text-slate-50">
+      <h2 className="flex flex-wrap items-baseline gap-x-2 text-base font-semibold text-ink">
         {title}
-        {hint ? <span className="text-xs font-normal text-slate-500">{hint}</span> : null}
+        {hint ? <span className="text-xs font-normal text-ink-faint">{hint}</span> : null}
       </h2>
       {children}
     </section>
@@ -49,18 +49,18 @@ export function MergeOverview({ ticket, flow, body }: Props) {
   const rows = useMemo(() => buildRows(parseCriteria(body), results), [body, results])
 
   let main: React.ReactNode
-  if (prStatus.isPending) main = <p className="text-sm text-slate-500">Chargement de la PR…</p>
+  if (prStatus.isPending) main = <p className="text-sm text-ink-faint">Chargement de la PR…</p>
   else if (!repo || !number || !sha) {
-    main = <p className="text-sm text-red-400">PR introuvable : le daemon n'a pas donné sa tête (dépôt, numéro, SHA).</p>
-  } else if (files.isPending) main = <p className="text-sm text-slate-500">Chargement des fichiers de la PR…</p>
-  else if (files.isError) main = <p className="text-sm text-red-400">Fichiers de la PR illisibles : {files.error.message}</p>
+    main = <p className="text-sm text-rose-400">PR introuvable : le daemon n'a pas donné sa tête (dépôt, numéro, SHA).</p>
+  } else if (files.isPending) main = <p className="text-sm text-ink-faint">Chargement des fichiers de la PR…</p>
+  else if (files.isError) main = <p className="text-sm text-rose-400">Fichiers de la PR illisibles : {files.error.message}</p>
   else if (visual) main = <FinalResult repo={repo} sha={sha} files={files.data.files} runIds={runIds} />
   else main = <CodeChanges files={files.data.files} hasMore={files.data.hasMore} repo={repo} number={number} sha={sha} />
 
   return (
     <div className="space-y-5" data-testid="merge-overview">
-      <p className="rounded-md border border-line bg-surface px-3 py-2 text-sm">
-        <span className="mr-3 font-medium text-slate-300">{ROUTE_ICON[route].label}</span>
+      <p className="rounded-md border border-line bg-card px-3 py-2 text-sm">
+        <span className="mr-3 font-medium text-ink-soft">{ROUTE_ICON[route].label}</span>
         <CriteriaSummary rows={rows} />
       </p>
       <Section

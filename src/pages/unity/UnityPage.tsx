@@ -1,3 +1,5 @@
+import { PageHeader } from '../../components/ui/PageHeader'
+import { CARD, H2 } from '../../components/ui/classes'
 import { memo, useState } from 'react'
 import { Async } from '../../components/Async'
 import { StatusDot } from '../../components/StatusDot'
@@ -6,8 +8,6 @@ import type { CompileResult, UnityStatus } from '../../api/types/unity'
 import { TestQueueCard } from './TestQueueCard'
 import { ticketLabel, useReleaseLock, useUnityStatus } from './queries'
 
-const CARD = 'rounded border border-slate-800 bg-slate-900/40 p-4'
-const H2 = 'mb-2 text-sm font-semibold text-slate-100'
 
 const EditorCard = memo(function EditorCard({ editor }: { editor: UnityStatus['editor'] }) {
   return (
@@ -16,9 +16,9 @@ const EditorCard = memo(function EditorCard({ editor }: { editor: UnityStatus['e
       <p className="flex items-center gap-2">
         <StatusDot tone={editor.running ? 'ok' : 'muted'} />
         {editor.running ? 'ouvert' : 'fermé'}
-        {editor.pid !== null && editor.running ? <span className="text-slate-400">PID {editor.pid}</span> : null}
+        {editor.pid !== null && editor.running ? <span className="text-ink-muted">PID {editor.pid}</span> : null}
       </p>
-      <p className="mt-1 break-all text-xs text-slate-400">{editor.projectPath ?? 'projet inconnu'}</p>
+      <p className="mt-1 break-all text-xs text-ink-muted">{editor.projectPath ?? 'projet inconnu'}</p>
     </section>
   )
 })
@@ -28,7 +28,7 @@ function ReleaseButton() {
   const [confirming, setConfirming] = useState(false)
   if (!confirming) {
     return (
-      <button type="button" className="rounded border border-slate-700 px-2 py-1 text-xs hover:bg-slate-800" onClick={() => setConfirming(true)}>
+      <button type="button" className="rounded border border-line-strong px-2 py-1 text-xs hover:bg-raised" onClick={() => setConfirming(true)}>
         Libérer
       </button>
     )
@@ -38,13 +38,13 @@ function ReleaseButton() {
       <span className="text-amber-300">Libérer le verrou ? L&apos;étape en cours perd l&apos;éditeur.</span>
       <button
         type="button"
-        className="rounded bg-rose-600 px-2 py-1 font-medium text-white hover:bg-rose-500 disabled:opacity-50"
+        className="rounded bg-rose-600 px-2.5 py-1.5 font-medium text-white hover:bg-rose-500 disabled:opacity-50"
         disabled={release.isPending}
         onClick={() => release.mutate(undefined, { onSettled: () => setConfirming(false) })}
       >
         Confirmer la libération
       </button>
-      <button type="button" className="rounded border border-slate-700 px-2 py-1 hover:bg-slate-800" onClick={() => setConfirming(false)}>
+      <button type="button" className="rounded border border-line-strong px-2 py-1 hover:bg-raised" onClick={() => setConfirming(false)}>
         Annuler
       </button>
       {release.isError ? (
@@ -64,24 +64,24 @@ const LockCard = memo(function LockCard({ lock }: { lock: UnityStatus['lock'] })
         <div className="flex flex-col gap-2">
           {lock.holder ? (
             <dl className="grid grid-cols-[6rem_1fr] gap-y-0.5">
-              <dt className="text-slate-400">Détenteur</dt>
+              <dt className="text-ink-muted">Détenteur</dt>
               <dd>
-                {ticketLabel(lock.holder.ticketKey)} <span className="text-slate-500">({lock.holder.flowKey})</span>
+                {ticketLabel(lock.holder.ticketKey)} <span className="text-ink-faint">({lock.holder.flowKey})</span>
               </dd>
-              <dt className="text-slate-400">Étape</dt>
+              <dt className="text-ink-muted">Étape</dt>
               <dd>{lock.holder.stepId}</dd>
-              <dt className="text-slate-400">Depuis</dt>
+              <dt className="text-ink-muted">Depuis</dt>
               <dd>{formatDateTime(lock.holder.since)}</dd>
             </dl>
           ) : (
-            <p className="text-slate-300">Verrou pris, détenteur inconnu.</p>
+            <p className="text-ink-soft">Verrou pris, détenteur inconnu.</p>
           )}
           <div>
             <ReleaseButton />
           </div>
         </div>
       ) : (
-        <p className="text-slate-400">Libre.</p>
+        <p className="text-ink-muted">Libre.</p>
       )}
     </section>
   )
@@ -96,7 +96,7 @@ const CompileCard = memo(function CompileCard({ compile }: { compile: CompileRes
           <p className="flex items-center gap-2">
             <StatusDot tone={compile.ok ? 'ok' : 'danger'} />
             {compile.ok ? 'réussie' : `${compile.errors.length} erreur${compile.errors.length > 1 ? 's' : ''}`}
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-ink-muted">
               {compile.warnings} avertissement{compile.warnings > 1 ? 's' : ''} · {formatDurationMs(compile.durationMs)} ·{' '}
               {formatDateTime(compile.finishedAt)}
             </span>
@@ -108,14 +108,14 @@ const CompileCard = memo(function CompileCard({ compile }: { compile: CompileRes
                   <span className="text-rose-300">
                     {error.file}:{error.line}
                   </span>{' '}
-                  <span className="text-slate-300">{error.message}</span>
+                  <span className="text-ink-soft">{error.message}</span>
                 </li>
               ))}
             </ul>
           ) : null}
         </>
       ) : (
-        <p className="text-slate-400">Aucune compile enregistrée.</p>
+        <p className="text-ink-muted">Aucune compile enregistrée.</p>
       )}
     </section>
   )
@@ -129,12 +129,12 @@ const PlaytestCard = memo(function PlaytestCard({ playtest }: { playtest: UnityS
         <p className="flex items-center gap-2">
           <StatusDot tone={playtest.passed ? 'ok' : 'danger'} />
           {playtest.passed ? 'réussi' : 'échoué'}
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-ink-muted">
             {playtest.id} · {formatDateTime(playtest.finishedAt)}
           </span>
         </p>
       ) : (
-        <p className="text-slate-400">Aucun playtest enregistré.</p>
+        <p className="text-ink-muted">Aucun playtest enregistré.</p>
       )}
     </section>
   )
@@ -144,7 +144,7 @@ export default function UnityPage() {
   const query = useUnityStatus()
   return (
     <section className="flex max-w-3xl flex-col gap-4">
-      <h1 className="text-lg font-semibold text-slate-100">Unity</h1>
+      <PageHeader title="Unity" />
       <Async query={query} what="État de l'éditeur Unity">
         {(status) => (
           <>
@@ -158,7 +158,7 @@ export default function UnityPage() {
       <TestQueueCard />
       <section className={CARD} aria-label="Scénarios et recordings">
         <h2 className={H2}>Scénarios et recordings</h2>
-        <p className="text-xs text-slate-500">P7 : bibliothèque de scénarios, non-régression et enregistrement de repro.</p>
+        <p className="text-xs text-ink-faint">P7 : bibliothèque de scénarios, non-régression et enregistrement de repro.</p>
       </section>
     </section>
   )

@@ -33,8 +33,8 @@ const NO_QUEUE: never[] = []
 const ROW_ESTIMATE_PX = 52
 const OVERSCAN = 8
 const PILL = 'inline-flex min-h-10 shrink-0 items-center gap-1 rounded-full border px-3 text-sm whitespace-nowrap'
-const PILL_OFF = 'border-line text-slate-300'
-const PILL_ON = 'border-accent bg-accent/15 text-slate-50'
+const PILL_OFF = 'border-line-strong text-ink-soft'
+const PILL_ON = 'border-accent bg-accent-soft text-ink'
 const ROUTES: readonly (TicketRoute | '')[] = ['', 'code', 'art', 'map', 'doc']
 const TOUCH = 'inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded px-2 text-sm'
 const PRIMARY = `${TOUCH} border border-sky-700 bg-sky-900/40 text-sky-200`
@@ -79,17 +79,17 @@ const MobileCard = memo(function MobileCard({ ticket, onMenu }: { ticket: Ticket
   const reason = columnOf(ticket) === 'blocked' ? blockedReason(ticket) : null
   const step = flow?.stepId ?? flow?.phase ?? null
   return (
-    <article className="flex h-[52px] items-center border-b border-line-soft pl-1" data-testid={`card-${ticket.key}`}>
+    <article className="flex h-[52px] items-center border-b border-line pl-1" data-testid={`card-${ticket.key}`}>
       <Link to="/issue/$key" params={{ key: ticket.key }} className="flex min-h-10 min-w-0 flex-1 items-center gap-2 pr-1">
         <StatusIcon status={ticketIconStatus(ticket)} size={18} />
         <span className="flex min-w-0 flex-1 flex-col justify-center">
-          <span className="truncate text-slate-100">
-            <span className="font-mono text-xs text-slate-400">{ticketNumber(ticket)}</span> {displayTitle(ticket.summary)}
+          <span className="truncate text-ink">
+            <span className="font-mono text-xs text-ink-muted">{ticketNumber(ticket)}</span> {displayTitle(ticket.summary)}
           </span>
-          <span className="flex items-center gap-x-2 overflow-hidden text-xs whitespace-nowrap text-slate-500">
+          <span className="flex items-center gap-x-2 overflow-hidden text-xs whitespace-nowrap text-ink0">
             <span>{route.label}</span>
             {reason ? <span className="truncate text-st-running">{reason}</span> : null}
-            {!reason && step ? <span className="truncate text-slate-300">{step}</span> : null}
+            {!reason && step ? <span className="truncate text-ink-soft">{step}</span> : null}
             {!reason && flow?.startedAt && ACTIVE_FLOW.has(flow.status) ? <ElapsedLabel startedAt={flow.startedAt} /> : null}
           </span>
         </span>
@@ -97,7 +97,7 @@ const MobileCard = memo(function MobileCard({ ticket, onMenu }: { ticket: Ticket
       <PrimaryAction ticket={ticket} />
       <button
         type="button"
-        className={`${TOUCH} text-slate-400`}
+        className={`${TOUCH} text-ink-muted`}
         aria-label={`Actions ${ticketNumber(ticket)}`}
         onClick={() => onMenu(ticket)}
       >
@@ -141,7 +141,7 @@ function VirtualList({ tickets, onMenu }: { tickets: readonly Ticket[]; onMenu: 
   )
 }
 
-const FIELD = 'w-full rounded border border-line bg-bg px-2 text-sm text-slate-200'
+const FIELD = 'w-full rounded border border-line bg-canvas px-2 text-sm text-ink-soft'
 
 interface FiltersSheetProps {
   filters: Filters
@@ -154,7 +154,7 @@ function FiltersSheet({ filters, options, onChange, onClose }: FiltersSheetProps
   return (
     <BottomSheet title="Filtres" onClose={onClose}>
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-1 text-xs text-slate-400" role="group" aria-label="Route">
+        <div className="flex flex-col gap-1 text-xs text-ink-muted" role="group" aria-label="Route">
           Route
           <div className="flex flex-wrap gap-2">
             {ROUTES.map((route) => (
@@ -170,7 +170,7 @@ function FiltersSheet({ filters, options, onChange, onClose }: FiltersSheetProps
             ))}
           </div>
         </div>
-        <label className="flex flex-col gap-1 text-xs text-slate-400">
+        <label className="flex flex-col gap-1 text-xs text-ink-muted">
           Recherche
           <input
             type="search"
@@ -180,7 +180,7 @@ function FiltersSheet({ filters, options, onChange, onClose }: FiltersSheetProps
             onChange={(event) => onChange({ query: event.target.value })}
           />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-slate-400">
+        <label className="flex flex-col gap-1 text-xs text-ink-muted">
           Milestone
           <select className={FIELD} value={filters.milestone} onChange={(event) => onChange({ milestone: event.target.value })}>
             <option value="">Tous les milestones</option>
@@ -191,7 +191,7 @@ function FiltersSheet({ filters, options, onChange, onClose }: FiltersSheetProps
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-xs text-slate-400">
+        <label className="flex flex-col gap-1 text-xs text-ink-muted">
           Label
           <select className={FIELD} value={filters.label} onChange={(event) => onChange({ label: event.target.value })}>
             <option value="">Tous les labels</option>
@@ -205,7 +205,7 @@ function FiltersSheet({ filters, options, onChange, onClose }: FiltersSheetProps
         <div className="flex gap-2">
           <button
             type="button"
-            className="flex-1 rounded border border-slate-700 text-slate-300"
+            className="flex-1 rounded border border-line-strong text-ink-soft"
             onClick={() => onChange({ route: '', milestone: '', label: '', query: '' })}
           >
             Effacer
@@ -247,7 +247,7 @@ export default function BoardMobile() {
   return (
     <section className="flex h-full flex-col gap-2">
       <h1 className="sr-only">Board</h1>
-      <div className="-mx-3 -mt-3 flex shrink-0 items-center gap-1 border-b border-line bg-bg px-3 py-1.5">
+      <div className="-mx-3 -mt-3 flex shrink-0 items-center gap-1 border-b border-line bg-canvas px-3 py-1.5">
         <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none]" role="group" aria-label="État">
           {shown.map((state) => (
             <button
@@ -265,12 +265,12 @@ export default function BoardMobile() {
         <button type="button" className={`${PILL} ${filterCount ? PILL_ON : PILL_OFF}`} onClick={() => setSheet('filters')}>
           Filtres{filterCount ? ` ${filterCount}` : ''}
         </button>
-        <button type="button" className={`${TOUCH} text-slate-300`} aria-label="Actions du board" onClick={() => setSheet('menu')}>
+        <button type="button" className={`${TOUCH} text-ink-soft`} aria-label="Actions du board" onClick={() => setSheet('menu')}>
           ⋯
         </button>
       </div>
-      {tickets.isPending ? <p className="text-slate-500">Chargement…</p> : null}
-      {tickets.isError ? <p className="text-red-400">Tickets illisibles : {tickets.error.message}</p> : null}
+      {tickets.isPending ? <p className="text-ink0">Chargement…</p> : null}
+      {tickets.isError ? <p className="text-rose-400">Tickets illisibles : {tickets.error.message}</p> : null}
       {data ? (
         list.length > VIRTUALIZE_ABOVE ? (
           <VirtualList key={active} tickets={list} onMenu={setCardMenu} />
@@ -279,7 +279,7 @@ export default function BoardMobile() {
             {list.map((ticket) => (
               <MobileCard key={ticket.key} ticket={ticket} onMenu={setCardMenu} />
             ))}
-            {list.length === 0 ? <p className="px-1 text-slate-500">Aucun ticket.</p> : null}
+            {list.length === 0 ? <p className="px-1 text-ink0">Aucun ticket.</p> : null}
           </div>
         )
       ) : null}

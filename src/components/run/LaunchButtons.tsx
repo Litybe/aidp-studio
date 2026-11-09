@@ -1,10 +1,10 @@
 import { lazy, Suspense, useState } from 'react'
 import type { Ticket } from '../../api/types'
+import { BUTTON, BUTTON_PRIMARY } from '../ui/classes'
+import { Icon } from '../ui/Icon'
 
 const TicketRunDialog = lazy(() => import('./TicketRunDialog'))
 const GlobalRunDialog = lazy(() => import('./GlobalRunDialog'))
-
-const BUTTON = 'rounded border border-slate-700 px-2 py-0.5 text-xs text-slate-300 hover:bg-slate-800'
 
 /** « Lancer… » on an issue: opens the run dialog (loaded on first use). */
 export function LaunchRunButton({ ticket, label = 'Lancer…' }: { ticket: Ticket; label?: string }) {
@@ -12,6 +12,7 @@ export function LaunchRunButton({ ticket, label = 'Lancer…' }: { ticket: Ticke
   return (
     <>
       <button type="button" className={BUTTON} onClick={() => setOpen(true)}>
+        <Icon name="play" size={12} />
         {label}
       </button>
       {open ? (
@@ -23,13 +24,20 @@ export function LaunchRunButton({ ticket, label = 'Lancer…' }: { ticket: Ticke
   )
 }
 
-/** « Nouveau run » of the top bar. */
-export function NewRunButton() {
+/** « Nouveau run » of the top bar (icon only on the phone). */
+export function NewRunButton({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(false)
   return (
     <>
-      <button type="button" className={BUTTON} onClick={() => setOpen(true)}>
-        Nouveau run
+      <button
+        type="button"
+        className={compact ? `${BUTTON_PRIMARY} size-9 px-0` : BUTTON_PRIMARY}
+        onClick={() => setOpen(true)}
+        aria-label={compact ? 'Nouveau run' : undefined}
+        title={compact ? 'Nouveau run' : undefined}
+      >
+        <Icon name="plus" size={14} />
+        {compact ? null : 'Nouveau run'}
       </button>
       {open ? (
         <Suspense fallback={null}>

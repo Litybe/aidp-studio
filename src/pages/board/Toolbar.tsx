@@ -12,9 +12,10 @@ export function Toolbar({ withNewRun = false }: { withNewRun?: boolean }) {
   const dispatcher = useApiAction((verb: 'pause' | 'resume') => apiPost(routes.dispatcher(verb)))
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <ActionButton label="Sync GitHub" onRun={() => sync.run()} />
+      <ActionButton label="Sync GitHub" icon="github" onRun={() => sync.run()} />
       <ActionButton
         label={paused ? 'Reprendre le dispatcher' : 'Pause du dispatcher'}
+        icon={paused ? 'play' : 'pause'}
         tone={paused ? 'primary' : 'neutral'}
         onRun={() => dispatcher.run(paused ? 'resume' : 'pause')}
       />

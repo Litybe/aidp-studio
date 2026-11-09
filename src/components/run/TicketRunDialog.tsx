@@ -95,8 +95,8 @@ export default function TicketRunDialog({ ticket, onClose }: { ticket: Ticket; o
           if (target !== '') submit()
         }}
       >
-        <p className="text-xs text-slate-400">{ticket.summary}</p>
-        <fieldset className="flex gap-4 text-xs text-slate-300">
+        <p className="text-xs text-ink-muted">{ticket.summary}</p>
+        <fieldset className="flex gap-4 text-xs text-ink-soft">
           <legend className="sr-only">Mode de lancement</legend>
           <label className="flex items-center gap-1">
             <input type="radio" name="mode" checked={mode === 'flow'} onChange={() => setMode('flow')} />
@@ -151,14 +151,14 @@ export default function TicketRunDialog({ ticket, onClose }: { ticket: Ticket; o
           </select>
         </Field>
         <div className="space-y-1">
-          <label className="flex items-center gap-2 text-xs text-slate-300">
+          <label className="flex items-center gap-2 text-xs text-ink-soft">
             <input type="checkbox" checked={force} onChange={(event) => setForceChoice(event.target.checked)} />
             Forcer
           </label>
           {why ? <p className="text-xs text-amber-400">{why}</p> : null}
         </div>
         {cap > 0 ? (
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-ink-faint">
             Plafond de la route {route} : {formatTokens(cap)} tokens par ticket.
           </p>
         ) : null}

@@ -1,3 +1,4 @@
+import { INPUT } from '../../components/ui/classes'
 import { useState, type FormEvent } from 'react'
 import { fieldErrors } from '../../api/send'
 import { ROUTES } from '../../api/types/budget'
@@ -5,8 +6,7 @@ import { TRACKS, type RoutingRepo, type RoutingRule, type RoutingSettings, type 
 import { SaveStatus } from '../../components/SaveStatus'
 import { useSaveRouting } from './queries'
 
-const INPUT = 'rounded border border-slate-700 bg-slate-950 px-2 py-1'
-const BUTTON = 'rounded border border-slate-700 px-2 py-1 text-xs hover:bg-slate-800'
+const BUTTON = 'rounded border border-line-strong px-2 py-1 text-xs hover:bg-raised'
 const TARGETS_LIST = 'routing-targets'
 const NONE = ''
 
@@ -72,7 +72,7 @@ export function RoutingForm({ settings }: { settings: RoutingSettings }) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3" aria-label="Routage">
       <label className="flex flex-wrap items-center gap-2">
-        <span className="w-32 text-slate-400">Track par défaut</span>
+        <span className="w-32 text-ink-muted">Track par défaut</span>
         <select className={INPUT} value={track} onChange={(event) => setTrack(event.target.value)} aria-label="Track par défaut">
           <option value={NONE}>aucun</option>
           {TRACKS.map((name) => (
@@ -84,7 +84,7 @@ export function RoutingForm({ settings }: { settings: RoutingSettings }) {
         <Errors messages={fieldErrors(save.error, 'defaults.track')} />
       </label>
       <fieldset className="flex flex-col gap-1">
-        <legend className="mb-1 text-xs text-slate-400">Règles (la première qui correspond gagne)</legend>
+        <legend className="mb-1 text-xs text-ink-muted">Règles (la première qui correspond gagne)</legend>
         <datalist id={TARGETS_LIST}>
           {Object.keys(repos).map((name) => (
             <option key={name} value={name} />
@@ -118,7 +118,7 @@ export function RoutingForm({ settings }: { settings: RoutingSettings }) {
             <button type="button" className={BUTTON} onClick={() => setRules((current) => current.filter((_, at) => at !== index))}>
               Retirer
             </button>
-            {Object.keys(rule.others).length > 0 ? <span className="text-xs text-slate-500">{describeOthers(rule.others)}</span> : null}
+            {Object.keys(rule.others).length > 0 ? <span className="text-xs text-ink-faint">{describeOthers(rule.others)}</span> : null}
             <Errors
               messages={[
                 ...fieldErrors(save.error, `rules.${index}.match`),
@@ -140,10 +140,10 @@ export function RoutingForm({ settings }: { settings: RoutingSettings }) {
       </fieldset>
       {Object.keys(repos).length > 0 ? (
         <fieldset className="flex flex-col gap-1">
-          <legend className="mb-1 text-xs text-slate-400">Cibles de routage</legend>
+          <legend className="mb-1 text-xs text-ink-muted">Cibles de routage</legend>
           {Object.entries(repos).map(([name, repo]) => (
             <div key={name} className="flex flex-wrap items-center gap-2">
-              <span className="w-32 truncate text-slate-300" title={name}>
+              <span className="w-32 truncate text-ink-soft" title={name}>
                 {name}
               </span>
               {REPO_TEXTS.map((field) => (
@@ -210,7 +210,7 @@ export function RoutingForm({ settings }: { settings: RoutingSettings }) {
         </fieldset>
       ) : null}
       <div className="flex items-center gap-3">
-        <button type="submit" className="rounded bg-sky-600 px-3 py-1 font-medium text-white hover:bg-sky-500 disabled:opacity-50" disabled={save.isPending}>
+        <button type="submit" className="rounded bg-accent-strong px-3 py-1.5 font-medium text-white hover:bg-accent disabled:opacity-50" disabled={save.isPending}>
           Enregistrer le routage
         </button>
         <SaveStatus error={save.error} saved={save.data} />

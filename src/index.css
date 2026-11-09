@@ -1,33 +1,55 @@
 @import 'tailwindcss';
 
-/* System font only: no webfont download, no layout shift. */
+/*
+ * Design tokens. System font only (no webfont, no layout shift). The palette is a cool slate with a
+ * sky accent; the four tones (ok, warn, danger, muted) are the only semantic colours of the app.
+ */
 @theme {
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /* Surfaces, darkest to lightest. */
+  --color-canvas: oklch(14.5% 0.02 262);
+  --color-panel: oklch(17.5% 0.022 262);
+  --color-card: oklch(20.5% 0.024 262);
+  --color-raised: oklch(24% 0.026 262);
+  --color-line: oklch(29% 0.025 262);
+  --color-line-strong: oklch(36% 0.028 262);
+
+  /* Text. */
+  --color-ink: oklch(94% 0.01 262);
+  --color-ink-soft: oklch(84% 0.015 262);
+  --color-ink-muted: oklch(72% 0.02 262);
+  --color-ink-faint: oklch(56% 0.02 262);
+
+  /* Accent (sky). */
+  --color-accent: oklch(72% 0.14 235);
+  --color-accent-strong: oklch(62% 0.16 240);
+  --color-accent-soft: oklch(72% 0.14 235 / 14%);
+
+  --radius-card: 0.625rem;
+
   --font-mono: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', Consolas, Menlo, monospace;
 
-  /* Neutral scale. The whole app already speaks `slate-*`, so the dark theme is defined here once:
-     950 page, 900 surface, 800 raised / hover, 700 border; 500 and up is AA text on 950 and 900. */
-  --color-slate-50: #f0f6fc;
-  --color-slate-100: #e6edf3;
-  --color-slate-200: #d0d7de;
-  --color-slate-300: #b1bac4;
-  --color-slate-400: #9198a1;
-  --color-slate-500: #7d8590;
-  --color-slate-600: #484f58;
-  --color-slate-700: #30363d;
-  --color-slate-800: #21262d;
-  --color-slate-900: #151b23;
-  --color-slate-950: #0d1117;
+  /* Aliases used by the flow and merge views, mapped onto the cloud surfaces and text. */
+  --color-bg: var(--color-canvas);
+  --color-surface: var(--color-panel);
+  --color-surface-2: var(--color-card);
+  --color-line-soft: oklch(24% 0.026 262);
+  --color-fg: var(--color-ink);
+  --color-fg-muted: var(--color-ink-muted);
 
-  /* Semantic tokens: surfaces, borders, text. */
-  --color-bg: #0d1117;
-  --color-surface: #151b23;
-  --color-surface-2: #1c232c;
-  --color-line: #30363d;
-  --color-line-soft: #21262d;
-  --color-fg: #e6edf3;
-  --color-fg-muted: #9198a1;
-  --color-accent: #4493f8;
+  /* Neutral scale (`slate-*`) mapped onto the same ramp: 950 page, 900 panel, 800 card, 700 border. */
+  --color-slate-50: oklch(97% 0.008 262);
+  --color-slate-100: var(--color-ink);
+  --color-slate-200: var(--color-ink-soft);
+  --color-slate-300: oklch(78% 0.017 262);
+  --color-slate-400: var(--color-ink-muted);
+  --color-slate-500: oklch(64% 0.02 262);
+  --color-slate-600: var(--color-line-strong);
+  --color-slate-700: var(--color-line);
+  --color-slate-800: var(--color-raised);
+  --color-slate-900: var(--color-panel);
+  --color-slate-950: var(--color-canvas);
 
   /* One colour per status (the ones of StatusIcon). */
   --color-st-success: #3fb950;
@@ -38,18 +60,54 @@
   --color-st-human: #a371f7;
 }
 
-html {
-  color-scheme: dark;
-}
+/* Base styles live in the base layer, so a utility (`outline-none`, `rounded-full`) still wins. */
+@layer base {
+  html {
+    color-scheme: dark;
+    scrollbar-color: var(--color-line-strong) transparent;
+    scrollbar-width: thin;
+  }
 
-body {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  background: var(--color-bg);
-  color: var(--color-fg);
-  /* Fixed-width digits: durations and counters do not jitter. */
-  font-variant-numeric: tabular-nums;
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: var(--color-accent-soft);
+  }
+
+  /* One focus style for every control: a clear ring, no outline on mouse clicks. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Native selects: the dark arrow, room for it on the right. */
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    padding-right: 1.75rem;
+  }
+
+  /* Keyboard hints. */
+  kbd {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    line-height: 1;
+    padding: 0.2rem 0.35rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--color-line-strong);
+    border-bottom-width: 2px;
+    background: var(--color-raised);
+    color: var(--color-ink-muted);
+  }
 }
 
 /* Short transitions on interaction only; none when the user asks for reduced motion. */
@@ -63,7 +121,7 @@ body {
   }
 }
 
-/* Phone: no horizontal page scroll; touch targets of at least 40 px (no hover needed anywhere). */
+/* Phone: no horizontal page scroll; touch targets of at least 44 px (no hover needed anywhere). */
 html,
 body {
   overflow-x: hidden;
@@ -74,6 +132,6 @@ body {
   select,
   input:not([type='checkbox']):not([type='radio']),
   [role='tab'] {
-    min-height: 40px;
+    min-height: 44px;
   }
 }

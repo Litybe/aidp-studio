@@ -52,7 +52,7 @@ function InputField({
   const required = input.required === true
   if (input.type === 'boolean') {
     return (
-      <label className="flex items-center gap-2 text-xs text-slate-300">
+      <label className="flex items-center gap-2 text-xs text-ink-soft">
         <input type="checkbox" checked={value === true} onChange={(event) => onChange(event.target.checked)} />
         {label}
         {required ? <span className="text-amber-400"> *</span> : null}
@@ -87,7 +87,7 @@ function InputField({
   return (
     <Field label={label} required={required}>
       {control}
-      {input.description ? <span className="block text-slate-500">{input.description}</span> : null}
+      {input.description ? <span className="block text-ink-faint">{input.description}</span> : null}
     </Field>
   )
 }
@@ -184,9 +184,9 @@ export default function GlobalRunDialog({ onClose }: { onClose: () => void }) {
   const templates = useCatalogTemplates()
   return (
     <Modal title="Nouveau run" onClose={onClose}>
-      {templates.isPending ? <p className="text-xs text-slate-500">Chargement…</p> : null}
+      {templates.isPending ? <p className="text-xs text-ink-faint">Chargement…</p> : null}
       {templates.isError ? (
-        <p className="text-xs text-slate-500" data-testid="soon">
+        <p className="text-xs text-ink-faint" data-testid="soon">
           Lancement manuel : bientôt disponible
         </p>
       ) : null}

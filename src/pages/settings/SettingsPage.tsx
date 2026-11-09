@@ -1,3 +1,5 @@
+import { PageHeader } from '../../components/ui/PageHeader'
+import { CARD, H2 } from '../../components/ui/classes'
 import { memo, useState } from 'react'
 import { clearToken } from '../../api/auth'
 import { useGatewayStatus, useProjects } from '../../api/queries'
@@ -10,8 +12,6 @@ import { ModelsForm } from './ModelsForm'
 import { useCatalogFlows, useCatalogTemplates, useModels, useRouting, useSlots } from './queries'
 import { RoutingForm } from './RoutingForm'
 
-const CARD = 'rounded border border-slate-800 bg-slate-900/40 p-4'
-const H2 = 'mb-2 text-sm font-semibold text-slate-100'
 
 const RoutingCard = memo(function RoutingCard() {
   const query = useRouting()
@@ -73,13 +73,13 @@ const ProjectCard = memo(function ProjectCard() {
       <h2 className={H2}>Projet et chemins</h2>
       {daemon ? (
         <dl className="grid grid-cols-[9rem_1fr] gap-y-0.5 break-all">
-          <dt className="text-slate-400">Vault</dt>
+          <dt className="text-ink-muted">Vault</dt>
           <dd>{daemon.vault ?? 'désactivé'}</dd>
-          <dt className="text-slate-400">État du daemon</dt>
+          <dt className="text-ink-muted">État du daemon</dt>
           <dd>{daemon.stateDir}</dd>
-          <dt className="text-slate-400">Skill</dt>
+          <dt className="text-ink-muted">Skill</dt>
           <dd>{daemon.skillRoot ?? '—'}</dd>
-          <dt className="text-slate-400">Démarré</dt>
+          <dt className="text-ink-muted">Démarré</dt>
           <dd>{formatDateTime(daemon.startedAt)}</dd>
         </dl>
       ) : null}
@@ -87,7 +87,7 @@ const ProjectCard = memo(function ProjectCard() {
         <ul className="mt-2 flex flex-col gap-0.5 text-xs">
           {projects.map((project) => (
             <li key={project.id}>
-              <span className="text-slate-200">{project.name}</span> <span className="text-slate-500 break-all">{project.path}</span>
+              <span className="text-ink">{project.name}</span> <span className="text-ink-faint break-all">{project.path}</span>
             </li>
           ))}
         </ul>
@@ -104,7 +104,7 @@ const CatalogCard = memo(function CatalogCard() {
       <h2 className={H2}>Catalogues</h2>
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <h3 className="mb-1 text-xs text-slate-400">Flows</h3>
+          <h3 className="mb-1 text-xs text-ink-muted">Flows</h3>
           <Async query={flows} what="Catalogue des flows">
             {(items) => (
               <ul className="flex flex-col gap-0.5 text-xs">
@@ -118,14 +118,14 @@ const CatalogCard = memo(function CatalogCard() {
           </Async>
         </div>
         <div>
-          <h3 className="mb-1 text-xs text-slate-400">Templates</h3>
+          <h3 className="mb-1 text-xs text-ink-muted">Templates</h3>
           <Async query={templates} what="Catalogue des templates">
             {(items) => (
               <ul className="flex flex-col gap-0.5 text-xs">
                 {items.map((template) => (
                   <li key={template.id}>
                     {template.id}
-                    {template.stageCount !== undefined ? <span className="text-slate-500"> · {template.stageCount} stages</span> : null}
+                    {template.stageCount !== undefined ? <span className="text-ink-faint"> · {template.stageCount} stages</span> : null}
                   </li>
                 ))}
               </ul>
@@ -140,10 +140,10 @@ const CatalogCard = memo(function CatalogCard() {
 function LogoutCard() {
   return (
     <section className={CARD} aria-label="Connexion">
-      <h2 className="mb-2 font-semibold text-slate-100">Connexion</h2>
+      <h2 className="mb-2 font-semibold text-ink">Connexion</h2>
       <button
         type="button"
-        className="min-h-11 rounded border border-slate-600 px-3 py-1.5 text-slate-200 hover:bg-slate-800"
+        className="min-h-11 rounded border border-line-strong px-3 py-1.5 text-ink hover:bg-raised"
         onClick={clearToken}
       >
         Se déconnecter
@@ -156,7 +156,7 @@ export default function SettingsPage() {
   const [from] = useState(() => sinceDate(USAGE_DAYS, Date.now()))
   return (
     <section className="flex max-w-4xl flex-col gap-4">
-      <h1 className="text-lg font-semibold text-slate-100">Réglages</h1>
+      <PageHeader title="Réglages" />
       <RoutingCard />
       <ModelsCard from={from} />
       <SlotsCard />

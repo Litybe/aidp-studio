@@ -1,4 +1,5 @@
 import type { ColumnId, Ticket, TicketRoute } from '../../api/types'
+import type { Tone } from '../../components/ui/classes'
 
 export interface ColumnDef {
   id: ColumnId
@@ -185,4 +186,18 @@ export function defaultState(grouped: Record<StateId, readonly Ticket[]>): State
 
 export function activeFilterCount(filters: Filters): number {
   return [filters.milestone, filters.label, filters.query.trim()].filter(Boolean).length
+}
+
+/** Colour family of each column: waiting (accent), working (violet), testing (warn), merge (ok), stuck (danger). */
+export const COLUMN_TONE: Record<ColumnId, Tone> = {
+  triage: 'muted',
+  ready: 'accent',
+  queued: 'accent',
+  realisation: 'violet',
+  review: 'violet',
+  'to-test': 'warn',
+  test: 'warn',
+  merge: 'ok',
+  blocked: 'danger',
+  done: 'muted',
 }

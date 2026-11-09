@@ -3,23 +3,23 @@ import { isMissing } from '../api/send'
 import { unitySummary, useUnityStatus } from '../pages/unity/queries'
 import { StatusDot } from './StatusDot'
 
-/** Top bar: `Unity : ouvert, verrou #214`, or `inconnu` while the daemon has no `GET /api/unity/status`. */
-export const UnityIndicator = memo(function UnityIndicator() {
+/** `Unity : ouvert, verrou #214`, or `inconnu` while the daemon has no `GET /api/unity/status`. */
+export const UnityIndicator = memo(function UnityIndicator({ className = '' }: { className?: string }) {
   const query = useUnityStatus()
   if (!query.data) {
     const title = query.error && isMissing(query.error) ? "GET /api/unity/status n'existe pas encore" : 'état Unity indisponible'
     return (
-      <span className="hidden items-center gap-1.5 md:flex" title={title}>
+      <span className={`flex items-center gap-2 ${className}`} title={title}>
         <StatusDot tone="muted" />
-        <span className="text-slate-400">Unity : inconnu</span>
+        <span className="truncate text-ink-faint">Unity : inconnu</span>
       </span>
     )
   }
   const { text, tone } = unitySummary(query.data)
   return (
-    <span className="hidden items-center gap-1.5 md:flex" title={query.data.editor.projectPath ?? undefined}>
+    <span className={`flex items-center gap-2 ${className}`} title={query.data.editor.projectPath ?? undefined}>
       <StatusDot tone={tone} />
-      <span className="text-slate-300">Unity : {text}</span>
+      <span className="truncate text-ink-muted">Unity : {text}</span>
     </span>
   )
 })

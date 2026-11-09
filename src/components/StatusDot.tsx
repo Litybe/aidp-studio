@@ -1,16 +1,13 @@
-import type { IconStatus } from '../lib/status'
-import { StatusIcon } from './StatusIcon'
-
 export type DotTone = 'ok' | 'warn' | 'danger' | 'muted'
 
-const TONE: Record<DotTone, IconStatus> = {
-  ok: 'success',
-  warn: 'running',
-  danger: 'failure',
-  muted: 'pending',
+const TONE: Record<DotTone, string> = {
+  ok: 'bg-emerald-400 ring-emerald-400/25',
+  warn: 'bg-amber-400 ring-amber-400/25',
+  danger: 'bg-rose-400 ring-rose-400/25',
+  muted: 'bg-slate-500 ring-slate-500/20',
 }
 
-/** Indicator tones drawn with the app's single status icon: static, no pulse, no glow. */
+/** A static dot with a soft halo: no pulse, no glow, no animation. */
 export function StatusDot({ tone }: { tone: DotTone }) {
-  return <StatusIcon status={TONE[tone]} size={14} />
+  return <span aria-hidden="true" className={`inline-block size-2 shrink-0 rounded-full ring-3 ${TONE[tone]}`} />
 }

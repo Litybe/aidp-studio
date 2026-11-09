@@ -34,7 +34,7 @@ function ResultImage({ src, path, note }: { src: string; path: string; note?: st
   const onLoad = (event: { currentTarget: HTMLImageElement }) =>
     setSize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })
   return (
-    <figure className="min-w-0 overflow-hidden rounded-md border border-line bg-surface">
+    <figure className="min-w-0 overflow-hidden rounded-md border border-line bg-card">
       <div className="grid max-h-[75vh] place-items-center overflow-y-auto bg-slate-600 p-3">
         <AuthImage
           src={src}
@@ -43,8 +43,8 @@ function ResultImage({ src, path, note }: { src: string; path: string; note?: st
           style={{ ...PIXELATED, ...(size ? { width: size.width * scale } : {}), maxWidth: '100%', height: 'auto' }}
         />
       </div>
-      <figcaption className="space-y-1.5 border-t border-line p-3 text-xs text-slate-400">
-        <p className="font-mono break-all text-slate-200">{path}</p>
+      <figcaption className="space-y-1.5 border-t border-line p-3 text-xs text-ink-muted">
+        <p className="font-mono break-all text-ink-soft">{path}</p>
         <p>
           {size ? `${size.width} × ${size.height} px · zoom ×${scale}` : 'Chargement…'}
           {note ? ` · ${note}` : ''}
@@ -69,10 +69,10 @@ function ResultImage({ src, path, note }: { src: string; path: string; note?: st
 function Stale({ runIds }: { runIds: readonly string[] }) {
   const { files, pending } = useAllRunFiles(runIds, true)
   const images = files.filter((file) => file.kind === 'png' || file.kind === 'gif').slice(-IMAGE_CAP)
-  if (images.length === 0) return <p className="text-sm text-slate-500">{pending ? 'Chargement…' : 'Aucune image dans les runs non plus.'}</p>
+  if (images.length === 0) return <p className="text-sm text-ink-faint">{pending ? 'Chargement…' : 'Aucune image dans les runs non plus.'}</p>
   return (
     <div className="space-y-2">
-      <p className="rounded border border-st-running/50 bg-st-running/10 p-2 text-sm text-slate-200">
+      <p className="rounded border border-st-running/50 bg-st-running/10 p-2 text-sm text-ink-soft">
         Rendus des runs : ils peuvent être périmés, la PR ne contient pas d'image.
       </p>
       <div className="grid gap-3 md:grid-cols-2">
@@ -112,7 +112,7 @@ export function FinalResult({ repo, sha, files, runIds }: Props) {
       {images.length > shown.length ? (
         <button
           type="button"
-          className="min-h-10 rounded border border-line px-3 text-sm text-slate-200 hover:bg-surface-2"
+          className="min-h-10 rounded border border-line px-3 text-sm text-ink-soft hover:bg-raised"
           onClick={() => setAll(true)}
         >
           Afficher les {images.length - shown.length} autres images

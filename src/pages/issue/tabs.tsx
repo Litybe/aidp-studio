@@ -43,23 +43,23 @@ function MarkdownFile({ file }: { file: RunFileRef }) {
     ...NO_RETRY,
   })
   return (
-    <li className="rounded border border-slate-800 bg-slate-900/50">
+    <li className="rounded-card border border-line bg-card">
       <button
         type="button"
-        className="flex w-full items-center justify-between px-3 py-1.5 text-left text-sm text-slate-200 hover:bg-slate-800"
+        className="flex w-full items-center justify-between px-3 py-1.5 text-left text-sm text-ink hover:bg-raised"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
         <span>
-          {file.stage ? <span className="mr-2 text-xs text-slate-500">{file.stage}</span> : null}
+          {file.stage ? <span className="mr-2 text-xs text-ink-faint">{file.stage}</span> : null}
           {file.path}
         </span>
-        <span className="text-xs text-slate-500">{formatBytes(file.size)}</span>
+        <span className="text-xs text-ink-faint">{formatBytes(file.size)}</span>
       </button>
       {open ? (
-        <div className="border-t border-slate-800 p-3">
-          {text.isPending ? <p className="text-xs text-slate-500">Chargement…</p> : null}
-          {text.isError ? <p className="text-xs text-red-400">{text.error.message}</p> : null}
+        <div className="border-t border-line p-3">
+          {text.isPending ? <p className="text-xs text-ink-faint">Chargement…</p> : null}
+          {text.isError ? <p className="text-xs text-rose-400">{text.error.message}</p> : null}
           {text.data !== undefined ? <Markdown source={text.data} /> : null}
         </div>
       ) : null}
@@ -69,11 +69,11 @@ function MarkdownFile({ file }: { file: RunFileRef }) {
 
 export const ArtifactsTab = memo(function ArtifactsTab({ runIds }: { runIds: readonly string[] }) {
   const { files, missing, pending } = useAllRunFiles(runIds, true)
-  if (runIds.length === 0) return <p className="text-sm text-slate-500">Aucun run lié pour l'instant.</p>
+  if (runIds.length === 0) return <p className="text-sm text-ink-faint">Aucun run lié pour l'instant.</p>
   if (missing) return <Soon what="Artefacts" />
   const docs = files.filter((file) => file.kind === 'md')
-  if (pending && docs.length === 0) return <p className="text-sm text-slate-500">Chargement…</p>
-  if (docs.length === 0) return <p className="text-sm text-slate-500">Aucun artefact Markdown.</p>
+  if (pending && docs.length === 0) return <p className="text-sm text-ink-faint">Chargement…</p>
+  if (docs.length === 0) return <p className="text-sm text-ink-faint">Aucun artefact Markdown.</p>
   return (
     <ul className="space-y-2">
       {docs.map((file) => (
@@ -85,20 +85,20 @@ export const ArtifactsTab = memo(function ArtifactsTab({ runIds }: { runIds: rea
 
 export const ProofsTab = memo(function ProofsTab({ runIds }: { runIds: readonly string[] }) {
   const { files, missing } = useAllRunFiles(runIds, true)
-  if (runIds.length === 0) return <p className="text-sm text-slate-500">Aucun run lié pour l'instant.</p>
+  if (runIds.length === 0) return <p className="text-sm text-ink-faint">Aucun run lié pour l'instant.</p>
   if (missing) return <Soon what="Preuves" />
   const images = files.filter((file) => file.kind === 'png' || file.kind === 'gif')
-  if (images.length === 0) return <p className="text-sm text-slate-500">Aucune capture ni GIF.</p>
+  if (images.length === 0) return <p className="text-sm text-ink-faint">Aucune capture ni GIF.</p>
   return (
     <ul className="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-3">
       {images.map((file) => (
-        <li key={`${file.runId}/${file.path}`} className="rounded border border-slate-800 bg-slate-900/50 p-2">
+        <li key={`${file.runId}/${file.path}`} className="rounded-card border border-line bg-card p-2">
           <AuthImage
             src={runFileUrl(file.runId, file.path)}
             alt={file.path}
             className="max-h-48 w-full object-contain [image-rendering:pixelated]"
           />
-          <p className="mt-1 truncate text-xs text-slate-500" title={file.path}>
+          <p className="mt-1 truncate text-xs text-ink-faint" title={file.path}>
             {file.path} · {formatBytes(file.size)}
           </p>
         </li>
@@ -112,18 +112,18 @@ const pick = (a: Assumption, snake: keyof Assumption, camel: keyof Assumption) =
 export const AssumptionsTab = memo(function AssumptionsTab({ runIds }: { runIds: readonly string[] }) {
   const last = runIds[runIds.length - 1] ?? ''
   const detail = useRunDetail(last, last !== '')
-  if (last === '') return <p className="text-sm text-slate-500">Aucun run lié pour l'instant.</p>
+  if (last === '') return <p className="text-sm text-ink-faint">Aucun run lié pour l'instant.</p>
   if (detail.isError && isNotFound(detail.error)) return <Soon what="Hypothèses" />
   const list = detail.data?.assumptions ?? []
-  if (list.length === 0) return <p className="text-sm text-slate-500">Aucune décision prise sans demander.</p>
+  if (list.length === 0) return <p className="text-sm text-ink-faint">Aucune décision prise sans demander.</p>
   return (
     <ul className="space-y-2">
       {list.map((item, index) => (
-        <li key={index} className="rounded border border-slate-800 p-2 text-sm">
-          <p className="text-slate-100">{item.choice}</p>
-          {item.reason ? <p className="text-slate-400">Raison : {item.reason}</p> : null}
+        <li key={index} className="rounded-card border border-line p-2 text-sm">
+          <p className="text-ink">{item.choice}</p>
+          {item.reason ? <p className="text-ink-muted">Raison : {item.reason}</p> : null}
           {pick(item, 'rejected', 'rejected_alternative') ?? item.rejectedAlternative ? (
-            <p className="text-slate-500">Écarté : {String(pick(item, 'rejected', 'rejected_alternative') ?? item.rejectedAlternative)}</p>
+            <p className="text-ink-faint">Écarté : {String(pick(item, 'rejected', 'rejected_alternative') ?? item.rejectedAlternative)}</p>
           ) : null}
           {pick(item, 'auto_answered', 'autoAnswered') === true ? <p className="text-xs text-amber-400">répondu automatiquement</p> : null}
         </li>
@@ -137,17 +137,17 @@ export const JOURNAL_MAX = 300
 
 export const JournalTab = memo(function JournalTab({ flowKey }: { flowKey: string }) {
   const journal = useJournal(flowKey, true)
-  if (journal.isPending) return <p className="text-sm text-slate-500">Chargement…</p>
-  if (journal.isError) return isNotFound(journal.error) ? <Soon what="Journal" /> : <p className="text-sm text-red-400">{journal.error.message}</p>
+  if (journal.isPending) return <p className="text-sm text-ink-faint">Chargement…</p>
+  if (journal.isError) return isNotFound(journal.error) ? <Soon what="Journal" /> : <p className="text-sm text-rose-400">{journal.error.message}</p>
   const lines = journal.data.slice(-JOURNAL_MAX)
-  if (lines.length === 0) return <p className="text-sm text-slate-500">Journal vide.</p>
+  if (lines.length === 0) return <p className="text-sm text-ink-faint">Journal vide.</p>
   return (
-    <ol className="space-y-1 font-mono text-xs text-slate-300">
+    <ol className="space-y-1 font-mono text-xs text-ink-soft">
       {lines.map((line, index) => (
         <li key={index}>
-          <span className="text-slate-500">{line.time ?? ''}</span> {line.step ?? ''} {line.from ?? ''}
+          <span className="text-ink-faint">{line.time ?? ''}</span> {line.step ?? ''} {line.from ?? ''}
           {line.to ? ` → ${line.to}` : ''} {line.reason ? `(${line.reason})` : ''}
-          {line.actor ? <span className="text-slate-500"> · {line.actor}</span> : null}
+          {line.actor ? <span className="text-ink-faint"> · {line.actor}</span> : null}
         </li>
       ))}
     </ol>

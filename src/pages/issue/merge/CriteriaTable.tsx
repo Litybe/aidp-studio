@@ -23,12 +23,12 @@ export function StatusBadge({ status }: { status: CriterionStatus }) {
 /** « 5 réussis · 1 reporté · 0 échoué · 2 non vérifiés » for the strip above the page. */
 export function CriteriaSummary({ rows }: { rows: readonly CriterionRow[] }) {
   const counts = countStatuses(rows)
-  if (rows.length === 0) return <span className="text-slate-400">Aucun critère d'acceptation trouvé dans l'issue.</span>
+  if (rows.length === 0) return <span className="text-ink-muted">Aucun critère d'acceptation trouvé dans l'issue.</span>
   const order: CriterionStatus[] = ['pass', 'fail', 'deferred', 'unverified']
   return (
     <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
       {order.map((status) => (
-        <span key={status} className={`inline-flex items-center gap-1.5 ${counts[status] === 0 ? 'text-slate-500' : 'text-slate-100'}`}>
+        <span key={status} className={`inline-flex items-center gap-1.5 ${counts[status] === 0 ? 'text-ink-faint' : 'text-ink'}`}>
           <StatusIcon status={STATUS_ICON[status]} />
           <span>
             {counts[status]} {STATUS_LABEL[status]}
@@ -41,11 +41,11 @@ export function CriteriaSummary({ rows }: { rows: readonly CriterionRow[] }) {
 
 function Proof({ row }: { row: CriterionRow }) {
   if (row.proof === '' && row.status === 'unverified') {
-    return <span className="text-slate-500">Aucun résultat trouvé dans les stages.</span>
+    return <span className="text-ink-faint">Aucun résultat trouvé dans les stages.</span>
   }
   const long = row.proof.length > PROOF_PREVIEW
   return (
-    <div className="space-y-1 text-slate-300">
+    <div className="space-y-1 text-ink-soft">
       {row.proof !== '' ? (
         long ? (
           <details>
@@ -59,7 +59,7 @@ function Proof({ row }: { row: CriterionRow }) {
         )
       ) : null}
       {row.source ? (
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-ink-faint">
           {row.source}
           {row.status === 'unverified' && row.raw ? ` · statut brut « ${row.raw} »` : ''}
         </p>
@@ -72,10 +72,10 @@ const GRID = 'md:grid md:grid-cols-[4.5rem_minmax(0,1fr)_11rem_minmax(0,1.2fr)] 
 
 /** The criteria with their result: a table on a wide screen, one card per criterion on a phone. */
 export function CriteriaTable({ rows }: { rows: readonly CriterionRow[] }) {
-  if (rows.length === 0) return <p className="text-sm text-slate-400">Aucun critère d'acceptation trouvé dans l'issue.</p>
+  if (rows.length === 0) return <p className="text-sm text-ink-muted">Aucun critère d'acceptation trouvé dans l'issue.</p>
   return (
     <div role="table" aria-label="Critères d'acceptation" className="text-sm">
-      <div role="row" className={`hidden border-b border-line px-3 pb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase ${GRID}`}>
+      <div role="row" className={`hidden border-b border-line px-3 pb-2 text-xs font-semibold tracking-wide text-ink-faint uppercase ${GRID}`}>
         <span role="columnheader">Critère</span>
         <span role="columnheader">Libellé</span>
         <span role="columnheader">Résultat</span>
@@ -86,20 +86,20 @@ export function CriteriaTable({ rows }: { rows: readonly CriterionRow[] }) {
           <div
             key={row.id}
             role="row"
-            className={`space-y-1.5 rounded-md border px-3 py-2.5 md:rounded-none md:border-0 md:border-b md:border-line-soft ${GRID} ${
-              row.status === 'fail' ? 'border-st-failure/60 bg-st-failure/10' : 'border-line bg-surface'
+            className={`space-y-1.5 rounded-md border px-3 py-2.5 md:rounded-none md:border-0 md:border-b md:border-line ${GRID} ${
+              row.status === 'fail' ? 'border-st-failure/60 bg-st-failure/10' : 'border-line bg-card'
             }`}
           >
             <div className="flex items-center justify-between gap-2 md:contents">
-              <span role="cell" className="font-mono font-semibold text-slate-100">
+              <span role="cell" className="font-mono font-semibold text-ink">
                 {row.id}
               </span>
               <span role="cell" className="md:order-3">
                 <StatusBadge status={row.status} />
               </span>
             </div>
-            <p role="cell" className="text-slate-200 md:order-2">
-              {row.label !== '' ? row.label : <span className="text-slate-500">{row.listed ? '' : 'Vérification des stages, absente de l\'issue.'}</span>}
+            <p role="cell" className="text-ink-soft md:order-2">
+              {row.label !== '' ? row.label : <span className="text-ink-faint">{row.listed ? '' : 'Vérification des stages, absente de l\'issue.'}</span>}
             </p>
             <div role="cell" className="md:order-4">
               <Proof row={row} />

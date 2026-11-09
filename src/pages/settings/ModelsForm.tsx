@@ -43,7 +43,7 @@ export function ModelsForm({ settings, averages }: { settings: ModelsSettings; a
     <form onSubmit={submit} className="flex flex-col gap-3" aria-label="Politique de modèles">
       <div className="overflow-auto">
         <table className="text-left text-xs">
-          <thead className="text-slate-400">
+          <thead className="text-ink-muted">
             <tr>
               <th className="pr-3 font-normal">Stage</th>
               {routes.map((route) => (
@@ -57,13 +57,13 @@ export function ModelsForm({ settings, averages }: { settings: ModelsSettings; a
           <tbody>
             {stageRows(settings).map((stage) => (
               <tr key={stage}>
-                <td className="pr-3 text-slate-300">{stage}</td>
+                <td className="pr-3 text-ink-soft">{stage}</td>
                 {routes.map((route) => {
                   const errors = fieldErrors(save.error, `models.${route}.${stage}`)
                   return (
                     <td key={route} className="pr-2 py-0.5">
                       <select
-                        className="rounded border border-slate-700 bg-slate-950 px-1 py-0.5"
+                        className="rounded border border-line-strong bg-canvas px-1 py-0.5"
                         aria-label={`${route} ${stage}`}
                         aria-invalid={errors.length > 0}
                         title={errors.join(' ; ')}
@@ -88,14 +88,14 @@ export function ModelsForm({ settings, averages }: { settings: ModelsSettings; a
                     </td>
                   )
                 })}
-                <td className="pl-2 text-right tabular-nums text-slate-400">{averages.has(stage) ? formatTokens(averages.get(stage) ?? 0) : '—'}</td>
+                <td className="pl-2 text-right tabular-nums text-ink-muted">{averages.has(stage) ? formatTokens(averages.get(stage) ?? 0) : '—'}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       <div className="flex items-center gap-3">
-        <button type="submit" className="rounded bg-sky-600 px-3 py-1 font-medium text-white hover:bg-sky-500 disabled:opacity-50" disabled={save.isPending}>
+        <button type="submit" className="rounded bg-accent-strong px-3 py-1.5 font-medium text-white hover:bg-accent disabled:opacity-50" disabled={save.isPending}>
           Enregistrer les modèles
         </button>
         <SaveStatus error={save.error} saved={save.data} />

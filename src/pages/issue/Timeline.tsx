@@ -27,13 +27,13 @@ function JobBox({ job, selected, onSelect }: { job: Job; selected: boolean; onSe
       type="button"
       aria-pressed={selected}
       onClick={() => onSelect(job.id)}
-      className={`flex w-44 shrink-0 flex-col gap-1 rounded-md border px-3 py-2 text-left ${selected ? 'border-accent bg-surface-2' : 'border-line bg-surface hover:bg-surface-2'}`}
+      className={`flex w-44 shrink-0 flex-col gap-1 rounded-md border px-3 py-2 text-left ${selected ? 'border-accent bg-raised' : 'border-line bg-card hover:bg-raised'}`}
     >
       <span className="flex items-center gap-2">
         <StatusIcon status={job.status} />
-        <span className="min-w-0 truncate font-medium text-slate-100">{job.phase}</span>
+        <span className="min-w-0 truncate font-medium text-ink">{job.phase}</span>
       </span>
-      <span className="flex items-center justify-between text-xs text-slate-400">
+      <span className="flex items-center justify-between text-xs text-ink-muted">
         <span>{ICON_LABEL[job.status]}</span>
         <Duration start={job.startedAt} end={job.endedAt} />
       </span>
@@ -44,7 +44,7 @@ function JobBox({ job, selected, onSelect }: { job: Job; selected: boolean; onSe
 /** Desktop: the jobs left to right, linked by static SVG lines. Scrolls inside its own box when long. */
 function JobGraph({ jobs, selected, onSelect }: { jobs: readonly Job[]; selected: string | null; onSelect: (id: string) => void }) {
   return (
-    <ol className="flex items-center overflow-x-auto rounded-md border border-line bg-bg p-4" aria-label="Graphe des jobs">
+    <ol className="flex items-center overflow-x-auto rounded-md border border-line bg-canvas p-4" aria-label="Graphe des jobs">
       {jobs.map((job, index) => (
         <li key={job.id} className="flex items-center">
           {index > 0 ? <Connector from={jobs[index - 1] as Job} /> : null}
@@ -61,23 +61,23 @@ function Summary({ flow, jobs }: { flow: FlowRun; jobs: readonly Job[] }) {
   const finished = jobs.reduce((sum, job) => sum + job.finished, 0)
   return (
     <div className="space-y-2 px-3 py-2">
-      <p className="flex items-center gap-2 font-medium text-slate-100">
+      <p className="flex items-center gap-2 font-medium text-ink">
         <StatusIcon status={status} />
         {FLOW_LABEL[flow.status] ?? flow.status}
       </p>
       <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-xs">
-        <dt className="text-slate-500">Flow</dt>
-        <dd className="truncate text-slate-300">{flow.def.id}</dd>
-        <dt className="text-slate-500">Étapes</dt>
-        <dd className="text-slate-300">
+        <dt className="text-ink-faint">Flow</dt>
+        <dd className="truncate text-ink-soft">{flow.def.id}</dd>
+        <dt className="text-ink-faint">Étapes</dt>
+        <dd className="text-ink-soft">
           {finished}/{total}
         </dd>
-        <dt className="text-slate-500">Durée</dt>
-        <dd className="text-slate-300">
+        <dt className="text-ink-faint">Durée</dt>
+        <dd className="text-ink-soft">
           <Duration start={flow.started_at} end={flow.ended_at} />
         </dd>
-        <dt className="text-slate-500">Début</dt>
-        <dd className="text-slate-300">{formatDateTime(flow.started_at)}</dd>
+        <dt className="text-ink-faint">Début</dt>
+        <dd className="text-ink-soft">{formatDateTime(flow.started_at)}</dd>
       </dl>
     </div>
   )
@@ -85,9 +85,9 @@ function Summary({ flow, jobs }: { flow: FlowRun; jobs: readonly Job[] }) {
 
 function Sidebar({ flow, jobs, selected, onSelect }: { flow: FlowRun; jobs: readonly Job[]; selected: string | null; onSelect: (id: string) => void }) {
   return (
-    <aside className="w-56 shrink-0 self-start rounded-md border border-line bg-surface" aria-label="Résumé et jobs">
+    <aside className="w-56 shrink-0 self-start rounded-md border border-line bg-card" aria-label="Résumé et jobs">
       <Summary flow={flow} jobs={jobs} />
-      <h3 className="border-t border-line-soft px-3 pt-2 pb-1 text-xs font-semibold tracking-wide text-slate-500 uppercase">Jobs</h3>
+      <h3 className="border-t border-line px-3 pt-2 pb-1 text-xs font-semibold tracking-wide text-ink-faint uppercase">Jobs</h3>
       <ul className="pb-1">
         {jobs.map((job) => (
           <li key={job.id}>
@@ -95,11 +95,11 @@ function Sidebar({ flow, jobs, selected, onSelect }: { flow: FlowRun; jobs: read
               type="button"
               aria-current={job.id === selected ? 'true' : undefined}
               onClick={() => onSelect(job.id)}
-              className={`flex min-h-9 w-full items-center gap-2 border-l-2 px-3 py-1 text-left ${job.id === selected ? 'border-accent bg-surface-2 text-slate-50' : 'border-transparent text-slate-300 hover:bg-surface-2'}`}
+              className={`flex min-h-9 w-full items-center gap-2 border-l-2 px-3 py-1 text-left ${job.id === selected ? 'border-accent bg-raised text-ink' : 'border-transparent text-ink-soft hover:bg-raised'}`}
             >
               <StatusIcon status={job.status} />
               <span className="min-w-0 flex-1 truncate">{job.phase}</span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-ink-muted">
                 <Duration start={job.startedAt} end={job.endedAt} />
               </span>
             </button>
@@ -117,13 +117,13 @@ export function GateCard({ flow }: { flow: FlowRun }) {
   const item = [...(flow.inbox ?? [])].reverse().find((entry) => entry.step === current)
   return (
     <div className="space-y-2 rounded-md border border-st-human/60 bg-st-human/10 p-3" role="group" aria-label="Validation requise">
-      <p className="flex items-center gap-2 font-medium text-slate-50">
+      <p className="flex items-center gap-2 font-medium text-ink">
         <StatusIcon status="human" />
         <span>
           Validation requise : <span className="font-mono">{current}</span>
         </span>
       </p>
-      {item?.prompt ? <p className="text-slate-300">{item.prompt}</p> : null}
+      {item?.prompt ? <p className="text-ink-soft">{item.prompt}</p> : null}
       <GateActions flow={flow} />
     </div>
   )
@@ -147,22 +147,22 @@ function JobAccordion({ flow, jobs, open, onToggle, overrides, onStep }: Accordi
         return (
           <li key={job.id} className="relative pb-2 pl-8">
             {index < jobs.length - 1 ? <span aria-hidden="true" className="absolute top-6 bottom-0 left-[11px] w-0.5 bg-line" /> : null}
-            <span className="absolute top-3 left-0 flex size-6 items-center justify-center rounded-full bg-bg">
+            <span className="absolute top-3 left-0 flex size-6 items-center justify-center rounded-full bg-canvas">
               <StatusIcon status={job.status} size={18} />
             </span>
             <button
               type="button"
               aria-expanded={isOpen}
               onClick={() => onToggle(job.id)}
-              className="flex min-h-12 w-full items-center gap-2 rounded-md border border-line bg-surface px-3 text-left"
+              className="flex min-h-12 w-full items-center gap-2 rounded-md border border-line bg-card px-3 text-left"
             >
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium text-slate-100">{job.phase}</span>
-                <span className="block text-xs text-slate-400">
+                <span className="block truncate font-medium text-ink">{job.phase}</span>
+                <span className="block text-xs text-ink-muted">
                   {ICON_LABEL[job.status]} · {job.finished}/{job.steps.length}
                 </span>
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-ink-muted">
                 <Duration start={job.startedAt} end={job.endedAt} />
               </span>
             </button>
@@ -187,7 +187,7 @@ export const Timeline = memo(function Timeline({ flow, showGate = true }: { flow
   const [openJobs, setOpenJobs] = useState<ReadonlySet<string> | null>(null)
   const onStep = useCallback((id: string, open: boolean) => setOverrides((current) => ({ ...current, [id]: open })), [])
 
-  if (jobs.length === 0) return <p className="text-slate-500">Ce flow n'a pas encore d'étapes.</p>
+  if (jobs.length === 0) return <p className="text-ink-faint">Ce flow n'a pas encore d'étapes.</p>
   const selected = picked && jobs.some((job) => job.id === picked) ? picked : defaultJob(jobs)
   const job = jobs.find((entry) => entry.id === selected) ?? jobs[0]
 

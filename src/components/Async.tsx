@@ -22,6 +22,6 @@ export function Async<T>({ query, what, soft400 = false, children }: AsyncProps<
       </p>
     )
   }
-  if (query.data === undefined) return <p className="text-xs text-slate-500">{what} : chargement…</p>
+  if (query.data === undefined) return <p className="text-xs text-ink-faint">{what} : chargement…</p>
   return <>{children(query.data)}</>
 }

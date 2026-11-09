@@ -3,14 +3,15 @@ import { apiPost, routes, useApiAction } from '../../api/actions'
 import { useSession } from '../../api/f1queries'
 import type { AskQuestion } from '../../api/types'
 import { FeedbackLine } from '../../components/ActionControls'
+import { BUTTON_SOFT } from '../../components/ui/classes'
 import { useSessionStream } from './stream'
 
 const KIND_STYLE = {
-  text: 'text-slate-200',
-  tool: 'text-sky-400',
+  text: 'text-ink',
+  tool: 'text-accent',
   question: 'text-amber-300',
   result: 'text-emerald-300',
-  done: 'text-slate-500',
+  done: 'text-ink-faint',
 } as const
 
 export function QuestionForm({
@@ -26,7 +27,7 @@ export function QuestionForm({
   const set = (question: string, value: string) => setAnswers((current) => ({ ...current, [question]: value }))
   return (
     <form
-      className="space-y-2 rounded border border-amber-800 bg-amber-950/30 p-2"
+      className="space-y-2 rounded-card border border-amber-900/60 bg-amber-950/30 p-3"
       onSubmit={(event) => {
         event.preventDefault()
         reply.run({
@@ -40,7 +41,7 @@ export function QuestionForm({
         <fieldset key={question.question} className="space-y-1">
           <legend className="text-sm text-amber-200">{question.question}</legend>
           {question.options?.map((option) => (
-            <label key={option.label} className="mr-3 inline-flex items-center gap-1 text-xs text-slate-300">
+            <label key={option.label} className="mr-3 inline-flex items-center gap-1 text-xs text-ink-soft">
               <input
                 type="radio"
                 name={question.question}
@@ -52,7 +53,7 @@ export function QuestionForm({
           ))}
           <input
             aria-label={`Réponse : ${question.question}`}
-            className="block w-full rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-100"
+            className="block w-full rounded border border-line-strong bg-card px-2 py-1 text-sm text-ink"
             value={answers[question.question] ?? ''}
             onChange={(event) => set(question.question, event.target.value)}
           />
@@ -61,7 +62,7 @@ export function QuestionForm({
       <button
         type="submit"
         disabled={!ready || reply.feedback.pending}
-        className="rounded border border-sky-700 bg-sky-900/40 px-2 py-0.5 text-xs text-sky-200 disabled:opacity-50"
+        className={BUTTON_SOFT}
       >
         Répondre
       </button>
@@ -74,17 +75,17 @@ export function QuestionForm({
 export function SessionPanel({ sessionId }: { sessionId: string | null }) {
   const info = useSession(sessionId)
   const stream = useSessionStream(sessionId, info.data !== undefined)
-  if (sessionId === null) return <p className="text-sm text-slate-500">Aucune session en cours.</p>
+  if (sessionId === null) return <p className="text-sm text-ink-faint">Aucune session en cours.</p>
   const question = info.data?.pendingQuestion
   return (
     <div className="space-y-2">
       {question ? <QuestionForm sessionId={sessionId} questions={question.questions} /> : null}
       {info.isError ? (
-        <p className="text-xs text-slate-500">Session indisponible (run natif ou route absente).</p>
+        <p className="text-xs text-ink-faint">Session indisponible (run natif ou route absente).</p>
       ) : null}
-      {stream.status === 'unavailable' ? <p className="text-xs text-slate-500">Flux indisponible.</p> : null}
+      {stream.status === 'unavailable' ? <p className="text-xs text-ink-faint">Flux indisponible.</p> : null}
       <ol
-        className="max-h-72 overflow-auto rounded bg-slate-900 p-2 font-mono text-xs"
+        className="max-h-72 overflow-auto rounded-md border border-line bg-canvas p-2 font-mono text-xs"
         aria-label="Flux de la session"
         data-testid="stream"
       >
