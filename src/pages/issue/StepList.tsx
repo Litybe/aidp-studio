@@ -7,6 +7,8 @@ import { Duration } from './Duration'
 import { isHumanStep, type Job, type JobStep } from './flowJobs'
 import { runsOfStep, sessionOfStep } from './flowTimeline'
 import { PipelineBadge, PipelinePanel } from './PipelinePanel'
+import { StepActions } from './Unblock'
+import { isStepUnblockable } from './unblockState'
 
 export { Duration } from './Duration'
 
@@ -115,6 +117,11 @@ const Row = memo(function Row({ step, flow, open, current, onToggle }: RowProps)
           <Duration start={step.state?.started_at} end={step.state?.finished_at} />
         </span>
       </button>
+      {isStepUnblockable(flow.status, step.status) ? (
+        <div className="px-3 pb-2 pl-9">
+          <StepActions flowKey={flow.key} stepId={step.id} />
+        </div>
+      ) : null}
       {open ? <Detail step={step} flow={flow} /> : null}
     </li>
   )

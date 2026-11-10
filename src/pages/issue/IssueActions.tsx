@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { apiPost, routes, useApiAction } from '../../api/actions'
-import type { FlowRun } from '../../api/types'
+import type { FlowRun, Ticket } from '../../api/types'
 import { ActionButton, FeedbackLine } from '../../components/ActionControls'
 import { BUTTON, INPUT, SELECT } from '../../components/ui/classes'
+import { ticketNumber } from '../board/columns'
+import { useRecovery } from './Unblock'
+import { canAbort } from './unblockState'
 
 const ACTIVE = new Set(['running', 'pausing', 'waiting_human', 'waiting_external'])
-const RETRYABLE = new Set(['failed', 'escalated'])
 
 function ManualForm({ flowKey }: { flowKey: string }) {
   const [mode, setMode] = useState<'action' | 'pipeline'>('action')
@@ -67,30 +69,27 @@ export function GateActions({ flow }: { flow: FlowRun }) {
   )
 }
 
-/** Flow-level actions: retry/skip of a step, pause/resume, manual launch (the gate has its own buttons). */
-export function IssueActions({ flow }: { flow: FlowRun }) {
-  const post = useApiAction((path: string) => apiPost(path))
-  const current = flow.current ?? null
-  const state = current ? flow.steps[current] : undefined
-  const status = state?.status
-  const failedStep = Object.entries(flow.steps).find(([, step]) => RETRYABLE.has(step.status))?.[0] ?? null
-  const retryId = failedStep ?? (status && RETRYABLE.has(status) ? current : null)
-  const run = (path: string) => () => post.run(path)
+/** Flow-level actions: pause/resume, abort, branch update, manual launch (retry/skip live on the step rows). */
+export function IssueActions({ flow, ticket, pr }: { flow: FlowRun; ticket: Ticket; pr?: { repo: string; number: number } | null }) {
+  const post = useApiAction((request: { path: string; body?: unknown }) => apiPost(request.path, request.body))
+  const { recovery } = useRecovery(ticket, flow)
+  const run = (path: string, body?: unknown) => () => post.run(body === undefined ? { path } : { path, body })
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        {retryId ? <ActionButton label="Relancer l'étape" tone="primary" icon="refresh" onRun={run(routes.step(flow.key, retryId, 'retry'))} /> : null}
-        {current && ACTIVE.has(flow.status) ? (
-          <ActionButton
-            label="Passer l'étape"
-            confirm={`Passer l'étape ${current} ?`}
-            onRun={run(routes.step(flow.key, current, 'skip'))}
-          />
-        ) : null}
         {ACTIVE.has(flow.status) ? <ActionButton label="Pause du flow" icon="pause" onRun={run(routes.flowPause(flow.key))} /> : null}
-        {flow.status === 'paused' ? (
+        {flow.status === 'paused' || flow.status === 'pausing' ? (
           <ActionButton label="Reprendre le flow" tone="primary" icon="play" onRun={run(routes.flowResume(flow.key))} />
         ) : null}
+        {canAbort(flow.status) && !recovery.abort ? (
+          <ActionButton
+            label="Annuler le flow"
+            tone="danger"
+            confirm={`Annuler le flow de ${ticketNumber(ticket)} ?`}
+            onRun={run(routes.flowAbort(flow.key))}
+          />
+        ) : null}
+        {pr ? <ActionButton label="Mettre à jour la branche" icon="merge" onRun={run(routes.prUpdateBranch, { repo: pr.repo, number: pr.number })} /> : null}
         <FeedbackLine feedback={post.feedback} />
       </div>
       <details className="text-xs text-ink-muted">
