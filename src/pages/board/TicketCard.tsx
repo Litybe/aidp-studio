@@ -38,9 +38,11 @@ export function ElapsedLabel({ startedAt }: { startedAt: string }) {
 
 export function costLabel(cost: TicketCost | undefined): string {
   if (!cost) return ''
-  if (typeof cost.costUsd === 'number') return formatUsd(cost.costUsd)
-  const tokens = cost.totalTokens ?? cost.tokens
-  return typeof tokens === 'number' ? formatTokens(tokens) : ''
+  const tokens = cost.totals?.totalTokens ?? cost.totalTokens ?? cost.tokens
+  if (typeof cost.costUsd === 'number' && cost.costUsd > 0) {
+    return typeof tokens === 'number' && tokens > 0 ? `${formatUsd(cost.costUsd)} · ${formatTokens(tokens)}` : formatUsd(cost.costUsd)
+  }
+  return typeof tokens === 'number' && tokens > 0 ? formatTokens(tokens) : ''
 }
 
 function CostChip({ ticketKey }: { ticketKey: string }) {

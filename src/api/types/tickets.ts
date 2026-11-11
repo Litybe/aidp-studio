@@ -53,6 +53,8 @@ export interface TicketCost {
   costUsd?: number | null
   tokens?: number | null
   totalTokens?: number | null
+  /** The daemon's sum over the ticket's sessions. */
+  totals?: { totalTokens?: number | null } | null
   turns?: number | null
   reviewTurns?: number | null
   testTurns?: number | null
