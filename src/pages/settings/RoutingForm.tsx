@@ -1,13 +1,12 @@
 import { INPUT } from '../../components/ui/classes'
 import { useState, type FormEvent } from 'react'
 import { fieldErrors } from '../../api/send'
-import { ROUTES } from '../../api/types/budget'
+import { ROUTES, type Route } from '../../api/types/budget'
 import { TRACKS, type RoutingRepo, type RoutingRule, type RoutingSettings, type RuleMatch, type Track } from '../../api/types/settings'
 import { SaveStatus } from '../../components/SaveStatus'
-import { useSaveRouting } from './queries'
+import { useCatalogFlows, useCatalogTemplates, useSaveRouting } from './queries'
 
 const BUTTON = 'rounded border border-line-strong px-2 py-1 text-xs hover:bg-raised'
-const TARGETS_LIST = 'routing-targets'
 const NONE = ''
 
 function Errors({ messages }: { messages: string[] }) {
@@ -52,22 +51,99 @@ const describeOthers = (others: RuleMatch): string =>
     .map(([key, value]) => `${key}: ${String(value)}`)
     .join(' · ')
 
-const REPO_TEXTS = ['flow', 'template'] as const
+const FLOW_ROUTE = /-(code|art|map|doc)$/
+
+/** Route a flow id suggests (`game-art` gives `art`), when it ends with a known route. */
+export function inferRoute(flowId: string): Route | undefined {
+  const found = FLOW_ROUTE.exec(flowId)?.[1]
+  return ROUTES.find((route) => route === found)
+}
+
+/** Options of a select fed by the catalog, keeping the stored value even when the catalog does not know it. */
+function withCurrent(ids: readonly string[], current: string | undefined): string[] {
+  return current !== undefined && current !== '' && !ids.includes(current) ? [...ids, current] : [...ids]
+}
+
+interface PickProps {
+  label: string
+  value: string | undefined
+  ids: readonly string[]
+  empty: string
+  onChange: (value: string) => void
+}
+
+function Pick({ label, value, ids, empty, onChange }: PickProps) {
+  return (
+    <select className={`${INPUT} w-full`} aria-label={label} value={value ?? NONE} onChange={(event) => onChange(event.target.value)}>
+      <option value={NONE}>{empty}</option>
+      {withCurrent(ids, value).map((id) => (
+        <option key={id} value={id}>
+          {id}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+const TH = 'px-1 py-1 text-left text-xs font-normal text-ink-muted'
 
 /** Labels and keywords to route targets, per-target flow, template, route and track, default track. */
 export function RoutingForm({ settings }: { settings: RoutingSettings }) {
   const save = useSaveRouting()
+  const flowIds = (useCatalogFlows().data ?? []).map((flow) => flow.id)
+  const templateIds = (useCatalogTemplates().data ?? []).map((template) => template.id)
   const [track, setTrack] = useState<string>(settings.defaults.track ?? NONE)
   const [rules, setRules] = useState<RuleDraft[]>(() => settings.rules.map(toDraft))
   const [repos, setRepos] = useState<Record<string, RoutingRepo>>(() => structuredClone(settings.repos))
+  const [raw, setRaw] = useState('')
+  const [rawError, setRawError] = useState('')
+  const [pending, setPending] = useState('')
+
+  const current = (): RoutingSettings => ({ defaults: track === NONE ? {} : { track: track as Track }, rules: rules.map(toRule), repos })
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    save.mutate({ defaults: track === NONE ? {} : { track: track as Track }, rules: rules.map(toRule), repos })
+    save.mutate(current())
   }
 
-  const setRule = (index: number, patch: Partial<RuleDraft>) => setRules((current) => current.map((rule, at) => (at === index ? { ...rule, ...patch } : rule)))
-  const setRepo = (name: string, patch: (repo: RoutingRepo) => RoutingRepo) => setRepos((current) => ({ ...current, [name]: patch(current[name] ?? {}) }))
+  const targets = Object.keys(repos)
+  const usedFlows = new Set(Object.values(repos).map((repo) => repo.flow))
+  const missingFlows = flowIds.filter((id) => !usedFlows.has(id))
+  const setRule = (index: number, patch: Partial<RuleDraft>) => setRules((list) => list.map((rule, at) => (at === index ? { ...rule, ...patch } : rule)))
+  const setField = (name: string, field: keyof RoutingRepo, value: string) =>
+    setRepos((list) => {
+      const next: Record<string, unknown> = { ...list[name] }
+      if (value === NONE) delete next[field]
+      else next[field] = value
+      return { ...list, [name]: next as RoutingRepo }
+    })
+
+  /** Adds one target per flow (named after it) and, when the flow implies a route, the `aidp:<route>` rule that selects it. */
+  function addFlows(ids: string[]) {
+    const created: Record<string, RoutingRepo> = {}
+    const wanted: RuleDraft[] = []
+    for (const id of ids) {
+      if (id in repos) continue
+      const route = inferRoute(id)
+      created[id] = route === undefined ? { flow: id } : { flow: id, route }
+      if (route !== undefined) wanted.push({ labels: `aidp:${route}`, keywords: '', service: id, others: {} })
+    }
+    setRepos((list) => ({ ...list, ...created }))
+    setRules((list) => [...list, ...wanted])
+    setPending('')
+  }
+
+  function applyRaw() {
+    try {
+      const parsed = JSON.parse(raw) as Partial<RoutingSettings>
+      setTrack(parsed.defaults?.track ?? NONE)
+      setRules((parsed.rules ?? []).map(toDraft))
+      setRepos(parsed.repos ?? {})
+      setRawError('')
+    } catch (error) {
+      setRawError(`JSON invalide : ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3" aria-label="Routage">
@@ -84,12 +160,75 @@ export function RoutingForm({ settings }: { settings: RoutingSettings }) {
         <Errors messages={fieldErrors(save.error, 'defaults.track')} />
       </label>
       <fieldset className="flex flex-col gap-1">
+        <legend className="mb-1 text-xs text-ink-muted">Flows ciblés (flow, template, route, track)</legend>
+        {targets.length === 0 ? <p className="text-xs text-ink-faint">Aucune cible : ajoutez les flows connus du daemon.</p> : null}
+        {targets.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[40rem] text-xs">
+              <thead>
+                <tr>
+                  <th className={TH}>Cible</th>
+                  <th className={TH}>Flow</th>
+                  <th className={TH}>Template</th>
+                  <th className={TH}>Route</th>
+                  <th className={TH}>Track</th>
+                  <th className={TH} />
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(repos).map(([name, repo]) => (
+                  <tr key={name}>
+                    <td className="px-1 py-0.5 text-ink-soft" title={name}>
+                      {name}
+                    </td>
+                    <td className="px-1 py-0.5">
+                      <Pick label={`${name} flow`} value={repo.flow} ids={flowIds} empty="flow : aucun" onChange={(value) => setField(name, 'flow', value)} />
+                    </td>
+                    <td className="px-1 py-0.5">
+                      <Pick label={`${name} template`} value={repo.template} ids={templateIds} empty="template : aucun" onChange={(value) => setField(name, 'template', value)} />
+                    </td>
+                    <td className="px-1 py-0.5">
+                      <Pick label={`${name} route`} value={repo.route} ids={ROUTES} empty="route : nom" onChange={(value) => setField(name, 'route', value)} />
+                    </td>
+                    <td className="px-1 py-0.5">
+                      <Pick label={`${name} track`} value={repo.track} ids={TRACKS} empty="track : défaut" onChange={(value) => setField(name, 'track', value)} />
+                    </td>
+                    <td className="px-1 py-0.5">
+                      <button
+                        type="button"
+                        className={BUTTON}
+                        aria-label={`Retirer la cible ${name}`}
+                        onClick={() => setRepos((list) => Object.fromEntries(Object.entries(list).filter(([key]) => key !== name)))}
+                      >
+                        Retirer
+                      </button>
+                      <Errors messages={['flow', 'template', 'route', 'track'].flatMap((field) => fieldErrors(save.error, `repos.${name}.${field}`))} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className={BUTTON} disabled={missingFlows.length === 0} onClick={() => addFlows(missingFlows)}>
+            Ajouter tous les flows connus{missingFlows.length > 0 ? ` (${missingFlows.length})` : ''}
+          </button>
+          <select className={INPUT} aria-label="Flow à ajouter" value={pending} onChange={(event) => setPending(event.target.value)}>
+            <option value={NONE}>Choisir un flow…</option>
+            {missingFlows.map((id) => (
+              <option key={id} value={id}>
+                {id}
+              </option>
+            ))}
+          </select>
+          <button type="button" className={BUTTON} disabled={pending === NONE} onClick={() => addFlows([pending])}>
+            Ajouter ce flow
+          </button>
+        </div>
+      </fieldset>
+      <fieldset className="flex flex-col gap-1">
         <legend className="mb-1 text-xs text-ink-muted">Règles (la première qui correspond gagne)</legend>
-        <datalist id={TARGETS_LIST}>
-          {Object.keys(repos).map((name) => (
-            <option key={name} value={name} />
-          ))}
-        </datalist>
         {rules.map((rule, index) => (
           <div key={index} className="flex flex-wrap items-center gap-2">
             <input
@@ -99,6 +238,20 @@ export function RoutingForm({ settings }: { settings: RoutingSettings }) {
               aria-label={`Labels ${index + 1}`}
               placeholder="labels : aidp:art, pixel:*"
             />
+            <select
+              className={INPUT}
+              aria-label={`Label connu ${index + 1}`}
+              value={NONE}
+              onChange={(event) => {
+                const label = event.target.value
+                if (label !== NONE && !toList(rule.labels).includes(label)) setRule(index, { labels: [...toList(rule.labels), label].join(', ') })
+              }}
+            >
+              <option value={NONE}>+ label</option>
+              {ROUTES.map((route) => (
+                <option key={route} value={`aidp:${route}`}>{`aidp:${route}`}</option>
+              ))}
+            </select>
             <input
               className={INPUT}
               value={rule.keywords}
@@ -107,15 +260,8 @@ export function RoutingForm({ settings }: { settings: RoutingSettings }) {
               placeholder="mots-clés : sprite, tileset"
             />
             <span aria-hidden="true">vers</span>
-            <input
-              className={INPUT}
-              list={TARGETS_LIST}
-              value={rule.service}
-              onChange={(event) => setRule(index, { service: event.target.value })}
-              aria-label={`Service ${index + 1}`}
-              placeholder="pixelhood-art"
-            />
-            <button type="button" className={BUTTON} onClick={() => setRules((current) => current.filter((_, at) => at !== index))}>
+            <Pick label={`Service ${index + 1}`} value={rule.service} ids={targets} empty="cible…" onChange={(value) => setRule(index, { service: value })} />
+            <button type="button" className={BUTTON} onClick={() => setRules((list) => list.filter((_, at) => at !== index))}>
               Retirer
             </button>
             {Object.keys(rule.others).length > 0 ? <span className="text-xs text-ink-faint">{describeOthers(rule.others)}</span> : null}
@@ -132,83 +278,31 @@ export function RoutingForm({ settings }: { settings: RoutingSettings }) {
           </div>
         ))}
         <div>
-          <button type="button" className={BUTTON} onClick={() => setRules((current) => [...current, { labels: '', keywords: '', service: '', others: {} }])}>
+          <button type="button" className={BUTTON} onClick={() => setRules((list) => [...list, { labels: '', keywords: '', service: targets[0] ?? '', others: {} }])}>
             Ajouter une règle
           </button>
         </div>
         <Errors messages={fieldErrors(save.error, 'rules')} />
       </fieldset>
-      {Object.keys(repos).length > 0 ? (
-        <fieldset className="flex flex-col gap-1">
-          <legend className="mb-1 text-xs text-ink-muted">Cibles de routage</legend>
-          {Object.entries(repos).map(([name, repo]) => (
-            <div key={name} className="flex flex-wrap items-center gap-2">
-              <span className="w-32 truncate text-ink-soft" title={name}>
-                {name}
-              </span>
-              {REPO_TEXTS.map((field) => (
-                <input
-                  key={field}
-                  className={`${INPUT} w-36`}
-                  value={repo[field] ?? ''}
-                  placeholder={field}
-                  aria-label={`${name} ${field}`}
-                  onChange={(event) => {
-                    const value = event.target.value
-                    setRepo(name, (current) => {
-                      const entry: RoutingRepo = { ...current }
-                      if (value === '') delete entry[field]
-                      else entry[field] = value
-                      return entry
-                    })
-                  }}
-                />
-              ))}
-              <select
-                className={INPUT}
-                aria-label={`${name} route`}
-                value={repo.route ?? NONE}
-                onChange={(event) =>
-                  setRepo(name, (current) => {
-                    const next: RoutingRepo = { ...current }
-                    if (event.target.value === NONE) delete next.route
-                    else next.route = event.target.value as (typeof ROUTES)[number]
-                    return next
-                  })
-                }
-              >
-                <option value={NONE}>route : nom</option>
-                {ROUTES.map((route) => (
-                  <option key={route} value={route}>
-                    {route}
-                  </option>
-                ))}
-              </select>
-              <select
-                className={INPUT}
-                aria-label={`${name} track`}
-                value={repo.track ?? NONE}
-                onChange={(event) =>
-                  setRepo(name, (current) => {
-                    const next: RoutingRepo = { ...current }
-                    if (event.target.value === NONE) delete next.track
-                    else next.track = event.target.value as Track
-                    return next
-                  })
-                }
-              >
-                <option value={NONE}>track : défaut</option>
-                {TRACKS.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              <Errors messages={[...REPO_TEXTS, 'route', 'track'].flatMap((field) => fieldErrors(save.error, `repos.${name}.${field}`))} />
-            </div>
-          ))}
-        </fieldset>
-      ) : null}
+      <details
+        className="text-xs"
+        onToggle={(event) => {
+          if (event.currentTarget.open) setRaw(JSON.stringify(current(), null, 2))
+        }}
+      >
+        <summary className="cursor-pointer text-ink-muted">Édition avancée (JSON brut)</summary>
+        <textarea className={`${INPUT} mt-1 h-48 w-full font-mono`} aria-label="Routage JSON" value={raw} onChange={(event) => setRaw(event.target.value)} />
+        <div className="mt-1 flex items-center gap-2">
+          <button type="button" className={BUTTON} onClick={applyRaw}>
+            Appliquer au formulaire
+          </button>
+          {rawError === '' ? null : (
+            <span role="alert" className="text-rose-400">
+              {rawError}
+            </span>
+          )}
+        </div>
+      </details>
       <div className="flex items-center gap-3">
         <button type="submit" className="rounded bg-accent-strong px-3 py-1.5 font-medium text-white hover:bg-accent disabled:opacity-50" disabled={save.isPending}>
           Enregistrer le routage

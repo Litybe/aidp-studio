@@ -14,8 +14,10 @@ import { COLUMN_TONE, COLUMNS, columnOf, routeOf, ticketNumber } from '../board/
 import { RouteBadge } from '../board/RouteBadge'
 import { ticketIconStatus } from '../board/ticketStatus'
 import { costLabel, FLOW_PILL } from '../board/TicketCard'
+import { CostSection } from './CostSection'
 import { DoctorPanel } from './DoctorPanel'
 import { IssueActions } from './IssueActions'
+import { MergeStateBadge } from './MergeStateBadge'
 import { UnblockBlock } from './Unblock'
 import { ArtifactsTab, AssumptionsTab, JournalTab, ProofsTab } from './tabs'
 import { Duration } from './StepList'
@@ -116,6 +118,7 @@ function Header({
             {typeof pr?.changedFiles === 'number' ? ` · ${pr.changedFiles} fichiers` : ''}
           </span>
         ) : null}
+        <MergeStateBadge pr={pr} />
         {total ? (
           <span className="flex items-center gap-1" title="Coût total">
             <Icon name="budget" size={12} className="text-ink-faint" />
@@ -209,6 +212,7 @@ export default function IssuePage() {
       ) : flowData ? (
         <FlowDetails flow={flowData} runIds={runIds} showGate />
       ) : null}
+      <CostSection ticketKey={ticket.data.ticket.key} />
       {ticket.data.body ? (
         <details className="rounded-card border border-line bg-card text-sm text-ink-muted">
           <summary className="min-h-10 cursor-pointer px-4 py-2 font-medium text-ink">Description de l'issue</summary>

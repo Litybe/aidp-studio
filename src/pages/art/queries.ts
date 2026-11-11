@@ -1,11 +1,11 @@
-import { useQueries, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { apiGet } from '../../api/client'
 import { f2Keys } from '../../api/f2Keys'
 import { retryOptional } from '../../api/send'
-import type { ArtImage, ArtTicket, FlowSessions, RunFile } from '../../api/types/art'
+import type { ArtAssetsPage, ArtTicket } from '../../api/types/art'
 import { asList } from '../../lib/format'
 
-/** Tickets of the art route (`route` comes with P2 in `GET /api/tickets`). */
+/** Tickets of the art route (`route` comes with P2 in `GET /api/tickets`); they give the titles. */
 export function useArtTickets() {
   return useQuery({
     queryKey: f2Keys.artTickets,
@@ -15,44 +15,31 @@ export function useArtTickets() {
   })
 }
 
-/** Native run ids named by `GET /api/flows/:key` (`sessions` maps an effect id to a run or session id). */
-export function runIdsOf(flow: FlowSessions | undefined): string[] {
-  return [...new Set(Object.values(flow?.sessions ?? {}).filter((id) => typeof id === 'string' && id !== ''))]
+export interface ArtFilters {
+  status: string
+  issue: string
+  q: string
 }
 
-/** `/api/runs/<id>/files/<path>`, each segment of the path encoded. */
-export function runFileUrl(runId: string, path: string): string {
-  return `/api/runs/${encodeURIComponent(runId)}/files/${path.split('/').map(encodeURIComponent).join('/')}`
+export const PAGE_SIZE = 24
+
+/** Query string of `GET /api/art/assets`; empty filters are left out. */
+export function assetsPath(filters: ArtFilters, before: string | null): string {
+  const params = new URLSearchParams({ limit: String(PAGE_SIZE) })
+  if (before) params.set('before', before)
+  if (filters.status) params.set('status', filters.status)
+  if (filters.issue) params.set('issue', filters.issue)
+  if (filters.q.trim()) params.set('q', filters.q.trim())
+  return `/art/assets?${params.toString()}`
 }
 
-export const isImage = (file: RunFile): boolean => file.kind === 'png' || file.kind === 'gif'
-
-/**
- * The images of one issue: flow of the ticket, then `GET /api/runs/:id/files` for each run id it names.
- * Loaded only once the issue is opened. A session id (not a run) answers 404 and is skipped.
- */
-export function useIssueImages(ticket: ArtTicket, enabled: boolean) {
-  const flowKey = ticket.flowSummary?.flowKey ?? null
-  const flow = useQuery({
-    queryKey: ['flows', 'art', ticket.key],
-    queryFn: ({ signal }) => apiGet<FlowSessions>(`/flows/${encodeURIComponent(flowKey ?? '')}`, signal),
-    enabled: enabled && flowKey !== null,
+/** Every sprite run (finished or not), newest first, loaded page by page. */
+export function useArtAssets(filters: ArtFilters) {
+  return useInfiniteQuery({
+    queryKey: ['art', 'assets', filters.status, filters.issue, filters.q.trim()] as const,
+    initialPageParam: null as string | null,
+    queryFn: ({ signal, pageParam }) => apiGet<ArtAssetsPage>(assetsPath(filters, pageParam), signal),
+    getNextPageParam: (last) => last.next,
     retry: retryOptional,
   })
-  const runIds = runIdsOf(flow.data)
-  const files = useQueries({
-    queries: runIds.map((runId) => ({
-      queryKey: [...f2Keys.artFiles(ticket.key), runId],
-      queryFn: ({ signal }: { signal: AbortSignal }) => apiGet<unknown>(`/runs/${encodeURIComponent(runId)}/files`, signal),
-      retry: false,
-    })),
-  })
-  const images: ArtImage[] = []
-  files.forEach((result, index) => {
-    const runId = runIds[index]
-    if (runId === undefined || result.data === undefined) return
-    for (const file of asList<RunFile>(result.data)) if (isImage(file)) images.push({ runId, file })
-  })
-  const loading = flow.isPending && flowKey !== null && enabled ? true : files.some((result) => result.isPending)
-  return { images, loading, flow, noFlow: flowKey === null }
 }

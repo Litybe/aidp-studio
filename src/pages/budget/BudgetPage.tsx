@@ -1,5 +1,6 @@
 import { PageHeader } from '../../components/ui/PageHeader'
 import { CARD, H2 } from '../../components/ui/classes'
+import { Link } from '@tanstack/react-router'
 import { memo, useState } from 'react'
 import { useDispatcherBudget, useLastRateLimit } from '../../api/queries'
 import type { DispatcherBudget } from '../../api/types'
@@ -101,7 +102,15 @@ const TopIssues = memo(function TopIssues({ from }: { from: string }) {
               <tbody>
                 {top.map((bucket) => (
                   <tr key={bucket.key}>
-                    <td>{ticketLabel(bucket.key)}</td>
+                    <td title={bucket.runs && bucket.runs.length > 0 ? `Runs : ${bucket.runs.join(', ')}` : undefined}>
+                      {bucket.key === 'unknown' ? (
+                        'inconnue'
+                      ) : (
+                        <Link to="/issue/$key" params={{ key: bucket.key }} className="text-accent hover:underline">
+                          {ticketLabel(bucket.key)}
+                        </Link>
+                      )}
+                    </td>
                     <td className="text-right tabular-nums">{formatTokens(bucket.totalTokens)}</td>
                     <td className="text-right tabular-nums">{bucket.sessions}</td>
                   </tr>
@@ -117,7 +126,8 @@ const TopIssues = memo(function TopIssues({ from }: { from: string }) {
 
 function describeBalance(balance: unknown): string {
   if (balance === null || balance === undefined) return 'inconnu'
-  if (typeof balance === 'number' || typeof balance === 'string') return String(balance)
+  if (typeof balance === 'number') return `${balance} générations restantes`
+  if (typeof balance === 'string') return balance
   if (typeof balance === 'object') {
     return Object.entries(balance as Record<string, unknown>)
       .filter(([, value]) => typeof value === 'number' || typeof value === 'string')

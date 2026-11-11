@@ -2,12 +2,11 @@ import { useNavigate } from '@tanstack/react-router'
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { apiPost, routes, useApiAction } from '../../api/actions'
 import { useTickets } from '../../api/f1queries'
-import { useDispatcherBudget } from '../../api/queries'
+import { useDispatcherPaused } from '../../api/queries'
 import { showToast } from '../../lib/toast'
 import { Icon } from '../ui/Icon'
 import { buildItems, type PaletteAction, type PaletteItem } from './items'
 
-const selectPaused = (budget: { verdict: { verdict: string } }) => budget.verdict.verdict === 'paused'
 const NO_TICKETS: never[] = []
 
 const GROUP_LABEL: Record<PaletteItem['kind'], string> = { page: 'Pages', action: 'Actions', ticket: 'Issues' }
@@ -28,9 +27,9 @@ export default function CommandPalette({ onClose, onNewRun }: CommandPaletteProp
   const [index, setIndex] = useState(0)
   const input = useRef<HTMLInputElement>(null)
   const tickets = useTickets().data ?? NO_TICKETS
-  const paused = useDispatcherBudget(selectPaused).data === true
+  const paused = useDispatcherPaused()
   const sync = useApiAction(() => apiPost(routes.ticketsSync))
-  const dispatcher = useApiAction((verb: 'pause' | 'resume') => apiPost(routes.dispatcher(verb)))
+  const dispatcher = useApiAction((verb: 'pause' | 'resume') => apiPost(routes.dispatcher(verb), verb === 'pause' ? { paused: true } : undefined))
   const items = useMemo(() => buildItems(query, tickets, paused), [query, tickets, paused])
   const active = items[Math.min(index, Math.max(0, items.length - 1))]
 

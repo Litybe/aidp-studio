@@ -1,6 +1,7 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import { useIsMobile } from '../lib/media'
 import { DaemonIndicator } from './DaemonIndicator'
+import { DispatcherIndicator } from './DispatcherIndicator'
 import { Gauges } from './Gauges'
 import { InboxBadge } from './InboxBadge'
 import { pageTitle } from './nav'
@@ -36,6 +37,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
         {pageTitle(pathname)}
       </h2>
       <div className="ml-auto flex items-center gap-2">
+        <DispatcherIndicator />
         <Gauges />
         <span aria-hidden="true" className="mx-1 h-5 w-px bg-line" />
         <button type="button" className={ICON_BUTTON} onClick={onSearch} aria-label="Rechercher ou agir (Ctrl K)" title="Rechercher ou agir (Ctrl K)">

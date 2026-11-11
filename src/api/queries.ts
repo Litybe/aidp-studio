@@ -96,3 +96,32 @@ export function useProjects() {
     queryFn: ({ signal }) => apiGet<Project[]>('/projects', signal),
   })
 }
+
+/** `GET /api/dispatcher`: the persisted dispatcher state (camelCase). */
+export interface DispatcherState {
+  mode: 'normal' | 'waiting' | 'paused' | string
+  paused: boolean
+  waitUntil: string | null
+  lastTickAt: string
+  lastReason: string
+  slots: { used: number; max: number; testUsed: number; testMax: number }
+  running: { key: string; sessionId: string; project: string; startedAt: string }[]
+}
+
+export function useDispatcherState<T>(select: (state: DispatcherState) => T) {
+  return useQuery({
+    queryKey: queryKeys.dispatcher,
+    queryFn: ({ signal }) => apiGet<DispatcherState>('/dispatcher', signal),
+    select,
+  })
+}
+
+/** Manual pause (state) or budget pause (verdict). */
+export function useDispatcherPaused(): boolean {
+  const manual = useDispatcherState(selectStatePaused).data === true
+  const budget = useDispatcherBudget(selectBudgetPaused).data === true
+  return manual || budget
+}
+
+const selectStatePaused = (state: DispatcherState) => state.paused
+const selectBudgetPaused = (budget: DispatcherBudget) => budget.verdict.verdict === 'paused'

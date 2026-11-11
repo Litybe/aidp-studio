@@ -27,3 +27,31 @@ export interface ArtImage {
   runId: string
   file: RunFile
 }
+
+/** A picture of an art run, from `GET /api/art/assets`. */
+export interface ArtAssetImage {
+  path: string
+  size: number
+  kind: RunFileKind
+  stage: string
+}
+
+/** One art run of `GET /api/art/assets`: finished or not, with its pictures. */
+export interface ArtAssetRun {
+  runId: string
+  templateId: string
+  status: string
+  ticket?: string
+  startedAt: string
+  endedAt?: string
+  /** Review mark out of 10, when a review wrote one. */
+  score?: number
+  cover: ArtAssetImage
+  images: ArtAssetImage[]
+}
+
+export interface ArtAssetsPage {
+  runs: ArtAssetRun[]
+  /** Cursor (`before`) of the next page, `null` on the last one. */
+  next: string | null
+}
