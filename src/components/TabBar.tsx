@@ -1,5 +1,7 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
+import { prefetchProps } from '../pages/prefetchProps'
 import { InboxBadge } from './InboxBadge'
 import { MemoryBadge } from './MemoryBadge'
 import { MORE_ITEMS, TAB_ITEMS, type NavItem } from './nav'
@@ -16,6 +18,7 @@ function Badge({ kind }: { kind: NavItem['badge'] }) {
 
 /** Phone navigation: fixed bottom bar with icons; the rarely used pages sit behind « Plus… ». */
 export function TabBar() {
+  const client = useQueryClient()
   const [open, setOpen] = useState(false)
   return (
     <nav className="relative shrink-0 border-t border-line bg-panel pb-[env(safe-area-inset-bottom)]" aria-label="Navigation">
@@ -25,6 +28,7 @@ export function TabBar() {
             <li key={item.to}>
               <Link
                 to={item.to}
+                {...prefetchProps(item.to, client)}
                 className="flex min-h-12 items-center gap-3 px-4 text-ink-muted"
                 activeProps={{ className: 'text-ink bg-raised' }}
                 onClick={() => setOpen(false)}
@@ -39,7 +43,7 @@ export function TabBar() {
       ) : null}
       <div className="flex">
         {TAB_ITEMS.map((item) => (
-          <Link key={item.to} to={item.to} className={TAB} activeProps={ACTIVE} activeOptions={{ exact: item.to === '/' }}>
+          <Link key={item.to} to={item.to} {...prefetchProps(item.to, client)} className={TAB} activeProps={ACTIVE} activeOptions={{ exact: item.to === '/' }}>
             <Icon name={item.icon} size={20} />
             <Badge kind={item.badge} />
             {item.label}

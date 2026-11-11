@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { memo, useState } from 'react'
 import { apiPost, routes, useApiAction } from '../../api/actions'
-import { useTicketCost } from '../../api/f1queries'
+import { useTicketCosts } from '../../api/f1queries'
 import type { QueueEntry, Ticket, TicketCost } from '../../api/types'
 import { ActionButton, FeedbackLine } from '../../components/ActionControls'
 import { StatusIcon } from '../../components/StatusIcon'
@@ -46,7 +46,7 @@ export function costLabel(cost: TicketCost | undefined): string {
 }
 
 function CostChip({ ticketKey }: { ticketKey: string }) {
-  const cost = useTicketCost(ticketKey).data
+  const cost = useTicketCosts(ticketKey)
   const label = costLabel(cost)
   return label ? (
     <span className="flex items-center gap-1" title="Coût">
@@ -74,7 +74,7 @@ interface CardProps {
 }
 
 function TurnsChip({ ticket }: { ticket: Ticket }) {
-  const cost = useTicketCost(ticket.key).data
+  const cost = useTicketCosts(ticket.key)
   const label = turnsLabel(ticket, cost)
   return label ? <span title="Tours de revue et de test">{label}</span> : null
 }

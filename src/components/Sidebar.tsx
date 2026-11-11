@@ -1,4 +1,6 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { prefetchProps } from '../pages/prefetchProps'
 import { useState } from 'react'
 import { DaemonIndicator } from './DaemonIndicator'
 import { InboxBadge } from './InboxBadge'
@@ -37,10 +39,12 @@ function Badge({ kind, collapsed }: { kind: NavItem['badge']; collapsed: boolean
 }
 
 function Item({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
+  const client = useQueryClient()
   return (
     <li>
       <Link
         to={item.to}
+        {...prefetchProps(item.to, client)}
         className={`${LINK} ${collapsed ? 'justify-center' : ''}`}
         activeProps={ACTIVE}
         activeOptions={{ exact: item.to === '/' }}

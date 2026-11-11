@@ -89,7 +89,7 @@ rules bind every lot (F1, F2); `src/main.tsx` repeats them.
    for the tab before reconnecting. TanStack Query: `staleTime` infinite (data lives by SSE),
    `refetchOnWindowFocus: false`, no `refetchInterval`, `retry` bounded to 2 and none when the
    daemon is unreachable.
-3. **RAM.** `gcTime` 60 s. Every stream buffer is a bounded `Ring` (events, later the journal and the
+3. **RAM.** `gcTime` 30 min (tab switches render from the cache; SSE invalidations keep it fresh). Every stream buffer is a bounded `Ring` (events, later the journal and the
    session stream). Long lists are virtualised with `@tanstack/react-virtual` once F1 has them. No
    global store duplicating the Query cache. No Devtools in the production build.
 4. **Bundle.** One chunk per route (`lazyRouteComponent`). No heavy dependency (no chart lib,
