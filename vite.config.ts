@@ -4,7 +4,7 @@ import { brotliCompressSync, constants as zlib, gzipSync } from 'node:zlib'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import type { Plugin } from 'vite'
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 const DAEMON = 'http://127.0.0.1:3001'
 const COMPRESSIBLE = /\.(js|css|html|svg|json|txt|webmanifest)$/
@@ -63,6 +63,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    // Agent worktrees hold full copies of the repo: never collect their tests.
+    exclude: [...configDefaults.exclude, '.claude/**'],
     css: false,
     restoreMocks: true,
   },

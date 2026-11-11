@@ -1,15 +1,14 @@
 import { apiPost, routes, useApiAction } from '../../api/actions'
-import { useDispatcherBudget } from '../../api/queries'
+import { useDispatcherPaused } from '../../api/queries'
 import { ActionButton, FeedbackLine } from '../../components/ActionControls'
+import { DispatcherIndicator } from '../../components/DispatcherIndicator'
 import { NewRunButton } from '../../components/run/LaunchButtons'
-
-const selectPaused = (budget: { verdict: { verdict: string } }) => budget.verdict.verdict === 'paused'
 
 /** Global board actions: Sync GitHub, dispatcher pause/resume, and « Nouveau run » on request. */
 export function Toolbar({ withNewRun = false }: { withNewRun?: boolean }) {
-  const paused = useDispatcherBudget(selectPaused).data === true
+  const paused = useDispatcherPaused()
   const sync = useApiAction(() => apiPost(routes.ticketsSync))
-  const dispatcher = useApiAction((verb: 'pause' | 'resume') => apiPost(routes.dispatcher(verb)))
+  const dispatcher = useApiAction((verb: 'pause' | 'resume') => apiPost(routes.dispatcher(verb), verb === 'pause' ? { paused: true } : undefined))
   const tick = useApiAction(() => apiPost(routes.dispatcherTick))
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -20,6 +19,7 @@ export function Toolbar({ withNewRun = false }: { withNewRun?: boolean }) {
         tone={paused ? 'primary' : 'neutral'}
         onRun={() => dispatcher.run(paused ? 'resume' : 'pause')}
       />
+      <DispatcherIndicator onClick={() => dispatcher.run(paused ? 'resume' : 'pause')} />
       <ActionButton label="Lancer un passage" icon="refresh" onRun={() => tick.run()} />
       {withNewRun ? <NewRunButton /> : null}
       <FeedbackLine feedback={sync.feedback} />

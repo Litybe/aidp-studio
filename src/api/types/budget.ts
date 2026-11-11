@@ -15,6 +15,8 @@ export interface UsageBucket {
   estimatedCostUsd: number
   sessions: number
   turns: number
+  /** Run ids behind a `ticket` bucket; absent for the other groupings. */
+  runs?: string[]
 }
 
 export type UsageGroupBy = 'day' | 'route' | 'stage' | 'model' | 'ticket'

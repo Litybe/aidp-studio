@@ -91,4 +91,10 @@ export interface TicketPr {
   /** `owner/name` of the repository and the tip of the PR branch (what the merge decision looks at). */
   repo?: string
   head?: { ref?: string; sha?: string }
+  /** GitHub `mergeable`: `conflicting` means merge conflicts; `unknown` while GitHub computes it. */
+  mergeable?: 'mergeable' | 'conflicting' | 'unknown'
+  /** GitHub `mergeStateStatus` (`dirty` = conflicts, `behind` = base moved on). */
+  mergeStateStatus?: 'clean' | 'dirty' | 'behind' | 'blocked' | 'unstable' | 'has_hooks' | 'draft' | 'unknown'
+  /** Commits the base has that the PR branch lacks. */
+  behindBy?: number
 }

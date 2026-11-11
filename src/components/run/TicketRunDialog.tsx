@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { routes } from '../../api/actions'
-import { useDispatcherBudget } from '../../api/queries'
+import { useDispatcherPaused } from '../../api/queries'
 import { apiSend } from '../../api/send'
 import type { Ticket } from '../../api/types'
 import type { RoutingSettings } from '../../api/types/settings'
@@ -14,7 +14,6 @@ import { useCatalogFlows, useCatalogTemplates, useRouting } from '../../pages/se
 import { Buttons, Field, INPUT, StartError } from './fields'
 import { Modal } from './Modal'
 
-const selectPaused = (budget: { verdict: { verdict: string } }) => budget.verdict.verdict === 'paused'
 
 /** Flow routed to this ticket: its service's entry first, else the first entry of its route. */
 export function routedFlow(ticket: Ticket, routing: RoutingSettings | undefined): string {
@@ -46,7 +45,7 @@ export default function TicketRunDialog({ ticket, onClose }: { ticket: Ticket; o
   const { dev: devFlows, test: testFlows } = splitFlows(flows)
   const routing = useRouting().data
   const budget = useBudgetSettings().data
-  const paused = useDispatcherBudget(selectPaused).data === true
+  const paused = useDispatcherPaused()
   const column = columnOf(ticket)
   const notReady = column === 'triage' || column === 'blocked'
   const forced = notReady || paused

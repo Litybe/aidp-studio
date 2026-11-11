@@ -50,7 +50,7 @@ describe('Réglages', () => {
       'GET /settings/routing': { body: ROUTING },
       'PUT /settings/routing': (call) => {
         const sent = call.body as { rules: { service: string }[] }
-        return sent.rules[1]?.service === 'bad'
+        return sent.rules[1]?.service === 'pixelhood-art'
           ? {
               status: 400,
               body: { error: 'invalid settings', code: 'bad_request', errors: [{ path: 'rules[1].service', message: 'cible inconnue' }, { path: 'repos.pixelhood-art.flow', message: 'flow vide' }] },
@@ -58,7 +58,7 @@ describe('Réglages', () => {
           : { body: { ...sent, ...SAVED } }
       },
       'GET /dispatcher': { body: { slots: { used: 2, max: 5 } } },
-      'GET /catalog/flows': { body: [{ id: 'game-code', name: 'Game code' }] },
+      'GET /catalog/flows': { body: [{ id: 'game-code', name: 'Game code' }, { id: 'game-map', name: 'Game map' }] },
       'GET /catalog/templates': { body: [{ id: 'dev-unity', stageCount: 6 }] },
     })
     renderPage(<SettingsPage />)
@@ -66,13 +66,11 @@ describe('Réglages', () => {
     expect(screen.getByText(/component: ui/)).toBeInTheDocument()
     expect(screen.getByLabelText('Labels 2')).toHaveValue('bug')
     const service = screen.getByLabelText('Service 2')
-    await userEvent.clear(service)
-    await userEvent.type(service, 'bad')
+    await userEvent.selectOptions(service, 'pixelhood-art')
     await userEvent.click(screen.getByRole('button', { name: 'Enregistrer le routage' }))
     expect(await screen.findByText('cible inconnue')).toBeInTheDocument()
     expect(screen.getByText('flow vide')).toBeInTheDocument()
-    await userEvent.clear(service)
-    await userEvent.type(service, 'pixelhood-bug')
+    await userEvent.selectOptions(service, 'pixelhood-code')
     await userEvent.selectOptions(screen.getByLabelText('pixelhood-code track'), 'quick')
     await userEvent.click(screen.getByRole('button', { name: 'Enregistrer le routage' }))
     expect(await screen.findByText('Enregistré.')).toBeInTheDocument()
@@ -81,7 +79,7 @@ describe('Réglages', () => {
       defaults: { track: 'standard' },
       rules: [
         { match: { component: 'ui', labels: ['aidp:art', 'pixel:*'], keywords: ['sprite'] }, service: 'pixelhood-art' },
-        { match: { labels: ['bug'] }, service: 'pixelhood-bug' },
+        { match: { labels: ['bug'] }, service: 'pixelhood-code' },
       ],
       repos: {
         'pixelhood-art': { route: 'art', flow: 'game-art' },
@@ -91,6 +89,40 @@ describe('Réglages', () => {
     expect(await screen.findByText('2 utilisés sur 5')).toBeInTheDocument()
     expect(await screen.findByText('Game code')).toBeInTheDocument()
     expect(within(screen.getByRole('region', { name: 'Catalogues' })).getByText(/dev-unity/)).toBeInTheDocument()
+  })
+
+  it('adds all known flows as targets with their route rule', async () => {
+    const calls = mockFetch({
+      'GET /settings/routing': { body: { defaults: {}, rules: [], repos: {} } },
+      'PUT /settings/routing': (call) => ({ body: { ...(call.body as object), ...SAVED } }),
+      'GET /catalog/flows': { body: [{ id: 'game-code' }, { id: 'game-map' }, { id: 'misc' }] },
+      'GET /catalog/templates': { body: [{ id: 'dev-unity' }] },
+    })
+    renderPage(<SettingsPage />)
+    await userEvent.click(await screen.findByRole('button', { name: /Ajouter tous les flows connus \(3\)/ }))
+    await userEvent.selectOptions(screen.getByLabelText('game-code template'), 'dev-unity')
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer le routage' }))
+    expect(await screen.findByText('Enregistré.')).toBeInTheDocument()
+    expect(calls.filter((call) => call.method === 'PUT').at(-1)?.body).toEqual({
+      defaults: {},
+      rules: [
+        { match: { labels: ['aidp:code'] }, service: 'game-code' },
+        { match: { labels: ['aidp:map'] }, service: 'game-map' },
+      ],
+      repos: { 'game-code': { flow: 'game-code', route: 'code', template: 'dev-unity' }, 'game-map': { flow: 'game-map', route: 'map' }, misc: { flow: 'misc' } },
+    })
+  })
+
+  it('applies raw JSON to the form', async () => {
+    mockFetch({ 'GET /settings/routing': { body: ROUTING } })
+    renderPage(<SettingsPage />)
+    await screen.findByLabelText('Labels 1')
+    await userEvent.click(screen.getByText('Édition avancée (JSON brut)'))
+    const area = screen.getByLabelText('Routage JSON')
+    expect((area as HTMLTextAreaElement).value).toContain('pixelhood-art')
+    await userEvent.clear(area)
+    await userEvent.click(screen.getByRole('button', { name: 'Appliquer au formulaire' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('JSON invalide')
   })
 
   it('saves the model policy under the models key, with the stages and tiers of the daemon', async () => {

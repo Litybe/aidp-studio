@@ -1,10 +1,12 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { mockFetch, renderPage } from '../../test/render'
+import type { UsageBucket } from '../../api/types/budget'
+import { mockFetch } from '../../test/render'
+import { renderPage } from '../../test/harness'
 import BudgetPage from './BudgetPage'
 import { bucketBars, dayBars, fromMillions, sinceDate, toMillions, topBuckets } from './queries'
 
-const bucket = (key: string, totalTokens: number) => ({
+const bucket = (key: string, totalTokens: number): UsageBucket => ({
   key,
   inputTokens: 0,
   outputTokens: 0,
@@ -92,17 +94,21 @@ describe('Budget page', () => {
         call.path.includes('groupBy=day')
           ? { body: usage('day', [bucket('2026-11-05', 1000), bucket('2026-11-06', 4000)]) }
           : call.path.includes('groupBy=ticket')
-            ? { body: usage('ticket', [bucket('GH-214', 9000), bucket('GH-3', 100)]) }
+            ? { body: usage('ticket', [{ ...bucket('GH-214', 9000), runs: ['20261110-140813-4648'] }, bucket('GH-3', 100), bucket('unknown', 5)]) }
             : { status: 400, body: { error: 'groupBy inconnu' } },
     })
-    renderPage(<BudgetPage />)
+    renderPage(BudgetPage)
     expect(await screen.findByTestId('verdict')).toHaveTextContent('prudent')
     expect(screen.getByTestId('gauge-5h')).toHaveTextContent('70%')
     expect(screen.getByTestId('gauge-5h')).toHaveTextContent('reset')
     const bars = await screen.findAllByTestId('bar')
     expect(bars.length).toBeGreaterThanOrEqual(2)
     const top = await screen.findByRole('region', { name: 'Issues les plus chères' })
-    await waitFor(() => expect(within(top).getByText('#214')).toBeInTheDocument())
+    const link = await within(top).findByRole('link', { name: '#214' })
+    expect(link).toHaveAttribute('href', '/issue/GH-214')
+    expect(link.closest('td')).toHaveAttribute('title', expect.stringContaining('20261110-140813-4648'))
+    expect(within(top).queryByText('20261110-140813-4648')).toBeNull()
+    expect(within(top).getByText('inconnue')).toBeInTheDocument()
     expect((await screen.findAllByTestId('coming-soon')).length).toBeGreaterThanOrEqual(3)
   })
 
@@ -127,7 +133,7 @@ describe('Budget page', () => {
           : { body: { ...SETTINGS, reloadRequired: false, changed: true } }
       },
     })
-    renderPage(<BudgetPage />)
+    renderPage(BudgetPage)
     const art = await screen.findByLabelText('Plafond art')
     await userEvent.clear(art)
     await userEvent.type(art, '99')
@@ -159,7 +165,7 @@ describe('Budget page', () => {
       'GET /settings/budget': { body: SETTINGS },
       'PUT /settings/budget': { body: { ...SETTINGS, reloadRequired: true, changed: true } },
     })
-    renderPage(<BudgetPage />)
+    renderPage(BudgetPage)
     await userEvent.clear(await screen.findByLabelText('Seuil 7 j'))
     await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
     expect(await screen.findByText(/redémarrage du daemon requis/)).toBeInTheDocument()
@@ -168,7 +174,7 @@ describe('Budget page', () => {
 
   it('refuses a text that is not a number without calling the daemon', async () => {
     const calls = mockFetch({ 'GET /dispatcher/budget': { body: BUDGET }, 'GET /settings/budget': { body: SETTINGS } })
-    renderPage(<BudgetPage />)
+    renderPage(BudgetPage)
     const slots = await screen.findByLabelText('Places de dev')
     await userEvent.clear(slots)
     await userEvent.type(slots, 'abc')
@@ -184,7 +190,7 @@ describe('Budget page', () => {
       'GET /settings/budget': { body: withTest },
       'PUT /settings/budget': { body: { ...withTest, reloadRequired: false, changed: true } },
     })
-    renderPage(<BudgetPage />)
+    renderPage(BudgetPage)
     const field = await screen.findByLabelText('Places de test')
     expect(field).not.toHaveAttribute('readonly')
     expect(field).toHaveValue('1')
@@ -201,10 +207,21 @@ describe('Budget page', () => {
       'GET /settings/budget': { body: SETTINGS },
       'PUT /settings/budget': { body: { ...SETTINGS, reloadRequired: false, changed: true } },
     })
-    renderPage(<BudgetPage />)
+    renderPage(BudgetPage)
     expect(await screen.findByLabelText('Places de test')).toHaveAttribute('readonly')
     await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
     await waitFor(() => expect(calls.some((call) => call.method === 'PUT')).toBe(true))
     expect(JSON.stringify(calls.filter((call) => call.method === 'PUT').at(-1)?.body)).not.toContain('test_slots')
+  })
+})
+
+describe('Pixellab card', () => {
+  it('shows the generations left sent by the daemon', async () => {
+    mockFetch({
+      'GET /dispatcher/budget': { body: BUDGET },
+      'GET /pixellab/balance': { body: { balance: 1436.6, recordedAt: '2026-11-10T15:30:00Z', minReserve: 0 } },
+    })
+    renderPage(BudgetPage)
+    expect(await screen.findByText(/1436\.6 générations restantes/)).toBeInTheDocument()
   })
 })
