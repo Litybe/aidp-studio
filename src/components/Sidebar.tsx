@@ -6,6 +6,7 @@ import { MemoryBadge } from './MemoryBadge'
 import { NAV_GROUPS, type NavItem } from './nav'
 import { ProjectSelector } from './ProjectSelector'
 import { Icon } from './ui/Icon'
+import { ModelIndicator } from './ModelIndicator'
 import { UnityIndicator } from './UnityIndicator'
 
 const STORAGE_KEY = 'aidp-studio.sidebar'
@@ -130,6 +131,7 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
       <div className={`flex flex-col gap-1.5 border-t border-line p-2 text-xs ${collapsed ? 'items-center' : ''}`}>
         <DaemonIndicator className={collapsed ? '[&>span:last-child]:sr-only' : 'px-1'} />
         <UnityIndicator className={collapsed ? '[&>span:last-child]:sr-only' : 'px-1'} />
+        <ModelIndicator className={collapsed ? '[&>span:last-child]:sr-only' : 'px-1'} />
         <button
           type="button"
           className="mt-1 flex h-8 w-full items-center justify-center gap-2 rounded-md text-ink-faint hover:bg-raised hover:text-ink"

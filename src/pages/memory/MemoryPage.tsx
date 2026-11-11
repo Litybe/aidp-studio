@@ -5,6 +5,7 @@ import { MEMORY_KINDS, MEMORY_STATUSES } from '../../api/types/memory'
 import { Async } from '../../components/Async'
 import { MemoryDetail } from './MemoryDetail'
 import { MemoryList } from './MemoryList'
+import { ModelCard } from './ModelCard'
 import { citation, KIND_LABEL, STATUS_LABEL, useMemories, useRagSearch, useReindex } from './queries'
 
 const SOURCES = ['', 'bible', 'doc', 'code', 'run', 'ticket', 'knowledge', 'memory'] as const
@@ -93,6 +94,7 @@ export default function MemoryPage() {
       <PageHeader title="Mémoire" subtitle="Faits, préférences et propositions apprises par les runs.">
         <ReindexButton />
       </PageHeader>
+      <ModelCard />
       <form
         className="flex flex-wrap gap-2"
         aria-label="Filtres"
