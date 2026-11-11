@@ -11,6 +11,7 @@ export const f2Keys = {
   dispatcherSlots: ['dispatcher', 'slots'] as const,
   memory: ['memory'] as const,
   memoryList: (status: string, kind: string, q: string) => ['memory', 'list', status, kind, q] as const,
+  memoryModel: ['memory-model'] as const,
   memoryProposed: ['memory', 'proposed'] as const,
   ragSearch: (q: string, source: string) => ['rag', q, source] as const,
   artTickets: ['tickets', 'art'] as const,

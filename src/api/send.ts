@@ -78,6 +78,23 @@ export function parseValidationBody(body: unknown): { fields: FieldError[]; gene
   return { fields, general, message }
 }
 
+/** `{ error: "msg", code }` (the daemon's shape) or `{ error: { code, message } }`. */
+function errorFields(body: unknown, status: number): { message: string; code: string | null } {
+  const fallback = `HTTP ${status}`
+  if (typeof body !== 'object' || body === null) return { message: fallback, code: null }
+  const record = body as { error?: unknown; code?: unknown }
+  const topCode = typeof record.code === 'string' ? record.code : null
+  if (typeof record.error === 'string') return { message: record.error, code: topCode }
+  if (typeof record.error === 'object' && record.error !== null) {
+    const nested = record.error as { message?: unknown; code?: unknown }
+    return {
+      message: typeof nested.message === 'string' ? nested.message : fallback,
+      code: typeof nested.code === 'string' ? nested.code : topCode,
+    }
+  }
+  return { message: fallback, code: topCode }
+}
+
 export type SendMethod = 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 /** `POST`/`PUT`/`PATCH` a JSON body to `/api<path>`. A `400` with a list becomes an {@link ApiValidationError}. */
@@ -99,8 +116,8 @@ export async function apiSend<T>(method: SendMethod, path: string, body?: unknow
       const { fields, general, message } = parseValidationBody(parsed)
       throw new ApiValidationError(message, fields, general)
     }
-    const text = typeof parsed === 'object' && parsed !== null ? (parsed as { error?: unknown }).error : null
-    throw new ApiError('http', typeof text === 'string' ? text : `HTTP ${response.status}`, response.status)
+    const { message, code } = errorFields(parsed, response.status)
+    throw new ApiError('http', message, response.status, code)
   }
   if (!isJson) return undefined as T
   try {

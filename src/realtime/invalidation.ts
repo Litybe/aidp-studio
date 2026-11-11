@@ -2,6 +2,7 @@ import type { QueryKey } from '@tanstack/react-query'
 import { f2Keys } from '../api/f2Keys'
 import { queryKeys } from '../api/queries'
 import type { BusEvent } from '../api/types'
+import { MEMORY_MODEL_EVENT } from '../api/types/memoryModel'
 import type { VisibilitySource } from '../lib/visibility'
 
 /** `type` is exact (`ticket.status`) or a prefix pattern (`ticket.*`); every matching rule applies. */
@@ -62,7 +63,7 @@ export const INVALIDATION_RULES: readonly InvalidationRule[] = [
   { type: 'run.waiting_gate', keys: always(queryKeys.inbox) },
   { type: 'worktree.*', keys: always(queryKeys.worktrees) },
   { type: 'unity.*', keys: always(f2Keys.unity) },
-  { type: 'memory.*', keys: always(f2Keys.memory) },
+  { type: 'memory.*', keys: (event) => (event.type === MEMORY_MODEL_EVENT ? [] : [f2Keys.memory]) },
   { type: 'settings.changed', keys: always(f2Keys.settingsAll, queryKeys.budget, queryKeys.dispatcher) },
   { type: 'preset.saved', keys: always(queryKeys.presets) },
 ]

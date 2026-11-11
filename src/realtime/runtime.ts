@@ -1,6 +1,8 @@
 import type { QueryClient, QueryKey } from '@tanstack/react-query'
 import { fetchEventToken, onTokenChange } from '../api/auth'
+import { f2Keys } from '../api/f2Keys'
 import { statusQuery } from '../api/queries'
+import { isMemoryModel, MEMORY_MODEL_EVENT } from '../api/types/memoryModel'
 import { Ticker } from '../lib/ticker'
 import { documentVisibility, type VisibilitySource } from '../lib/visibility'
 import { EventStream } from './events'
@@ -22,7 +24,14 @@ export function createRealtime(queryClient: QueryClient, visibility: VisibilityS
   }, visibility)
   const stream = new EventStream({
     probe: () => queryClient.fetchQuery({ ...statusQuery, staleTime: 0 }),
-    onEvent: (event) => batcher.add(keysForEvent(event)),
+    onEvent: (event) => {
+      if (event.type === MEMORY_MODEL_EVENT) {
+        if (isMemoryModel(event.data)) queryClient.setQueryData(f2Keys.memoryModel, event.data)
+        else batcher.add([f2Keys.memoryModel])
+        return
+      }
+      batcher.add(keysForEvent(event))
+    },
     onResync: () => batcher.add([EVERY_QUERY]),
     onOpen: () => {
       const failed = queryClient
