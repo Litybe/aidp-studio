@@ -35,8 +35,9 @@ describe('BoardPage', () => {
     mockApi({
       'GET /tickets': { body: [ready, running] },
       'GET /queue': { body: [] },
-      'GET /tickets/GH-12/cost': { body: { costUsd: 1.5 } },
-      'GET /tickets/GH-13/cost': { body: { costUsd: 0.25, reviewTurns: 2, testTurns: 1 } },
+      'GET /tickets/costs': {
+        body: { 'GH-12': { costUsd: 1.5 }, 'GH-13': { costUsd: 0.25, reviewTurns: 2, testTurns: 1 } },
+      },
     })
     renderPage(BoardPage)
     const readyColumn = await screen.findByRole('region', { name: 'Prêtes' })
@@ -50,11 +51,24 @@ describe('BoardPage', () => {
     expect(within(doing).getByText('12 min')).toBeInTheDocument()
   })
 
-  it('works when the cost route answers 404', async () => {
+  it('asks the costs once for the whole board, never per card', async () => {
+    const calls = mockApi({
+      'GET /tickets': { body: [ready, running] },
+      'GET /queue': { body: [] },
+      'GET /tickets/costs': { body: { 'GH-12': { costUsd: 1.5, totals: { totalTokens: 2000 } } } },
+    })
+    renderPage(BoardPage)
+    expect(await screen.findByText(/1,50/)).toBeInTheDocument()
+    expect(calls.filter((c) => c.path === '/tickets/costs')).toHaveLength(1)
+    expect(calls.filter((c) => c.path.endsWith('/cost'))).toHaveLength(0)
+  })
+
+  it('works, with no per-card request, when the costs route answers 404', async () => {
     const calls = mockApi({ 'GET /tickets': { body: [ready, running] }, 'GET /queue': { body: [] } })
     renderPage(BoardPage)
     await screen.findByText('Dash en l’air')
-    await waitFor(() => expect(calls.filter((c) => c.path.endsWith('/cost')).length).toBeGreaterThan(0))
+    await waitFor(() => expect(calls.filter((c) => c.path === '/tickets/costs')).toHaveLength(1))
+    expect(calls.filter((c) => c.path.endsWith('/cost'))).toHaveLength(0)
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(screen.getByText('Sprite du héros')).toBeInTheDocument()
   })
