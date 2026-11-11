@@ -1,4 +1,5 @@
-import { type QueryClient, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, type QueryClient, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback } from 'react'
 import { isNotFound } from './actions'
 import { apiGet } from './client'
 import { countInbox, queryKeys } from './queries'
@@ -22,6 +23,7 @@ export const f1Keys = {
   tickets: [...queryKeys.tickets, 'list'] as const,
   ticket: (key: string) => [...queryKeys.tickets, 'one', key] as const,
   cost: (key: string) => [...queryKeys.tickets, 'cost', key] as const,
+  costs: [...queryKeys.tickets, 'costs'] as const,
   pr: (key: string) => [...queryKeys.tickets, 'pr', key] as const,
   journal: (key: string) => [...queryKeys.flow(key), 'journal'] as const,
   doctor: (key: string) => [...queryKeys.flow(key), 'doctor'] as const,
@@ -36,11 +38,13 @@ export const f1Keys = {
 /** Optional (C11) routes never retry: a 404 settles at once. */
 const NO_RETRY = { retry: false } as const
 
+export const ticketsQuery = {
+  queryKey: f1Keys.tickets,
+  queryFn: ({ signal }: { signal: AbortSignal }) => apiGet<Ticket[]>('/tickets', signal),
+}
+
 export function useTickets() {
-  return useQuery({
-    queryKey: f1Keys.tickets,
-    queryFn: ({ signal }) => apiGet<Ticket[]>('/tickets', signal),
-  })
+  return useQuery(ticketsQuery)
 }
 
 export function useTicket(key: string) {
@@ -82,18 +86,22 @@ export function useFlowDoctor(key: string) {
   })
 }
 
+export const queueQuery = {
+  queryKey: f1Keys.queue,
+  queryFn: ({ signal }: { signal: AbortSignal }) => apiGet<QueueEntry[]>('/queue', signal),
+}
+
 export function useQueue() {
-  return useQuery({
-    queryKey: f1Keys.queue,
-    queryFn: ({ signal }) => apiGet<QueueEntry[]>('/queue', signal),
-  })
+  return useQuery(queueQuery)
+}
+
+export const inboxQuery = {
+  queryKey: queryKeys.inbox,
+  queryFn: ({ signal }: { signal: AbortSignal }) => apiGet<InboxEntry[]>('/inbox', signal),
 }
 
 export function useInbox() {
-  return useQuery({
-    queryKey: queryKeys.inbox,
-    queryFn: ({ signal }) => apiGet<InboxEntry[]>('/inbox', signal),
-  })
+  return useQuery(inboxQuery)
 }
 
 export function useSession(id: string | null) {
@@ -136,6 +144,48 @@ export function useTicketCost(key: string) {
     enabled: !missing,
     ...NO_RETRY,
   })
+}
+
+/** Cost of every ticket, keyed by ticket key (`GET /tickets/costs`). */
+export type TicketCosts = Record<string, TicketCost>
+
+const COSTS_MISSING = [...f1Keys.capabilities, 'costs-missing'] as const
+const NO_COSTS: TicketCosts = {}
+
+/**
+ * One request for the whole board instead of one per card. A daemon without the route (404/405)
+ * settles once to an empty map: the cards show no cost and nothing else is asked.
+ */
+export function useTicketCostMap<T>(select: (costs: TicketCosts) => T) {
+  const client = useQueryClient()
+  const missing = useQuery({
+    queryKey: COSTS_MISSING,
+    queryFn: () => false,
+    enabled: false,
+    initialData: false,
+  }).data
+  return useQuery({
+    queryKey: f1Keys.costs,
+    queryFn: async ({ signal }) => {
+      try {
+        return await apiGet<TicketCosts>('/tickets/costs', signal)
+      } catch (error) {
+        if (!isNotFound(error)) throw error
+        client.setQueryData(COSTS_MISSING, true)
+        return NO_COSTS
+      }
+    },
+    select,
+    enabled: !missing,
+    placeholderData: keepPreviousData,
+    ...NO_RETRY,
+  })
+}
+
+/** The cost of one board card, read from the shared map. */
+export function useTicketCosts(key: string): TicketCost | undefined {
+  const select = useCallback((costs: TicketCosts) => costs[key], [key])
+  return useTicketCostMap(select).data
 }
 
 export function useTicketPr(key: string, enabled: boolean) {

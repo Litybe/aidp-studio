@@ -26,8 +26,11 @@ export const queryKeys = {
 
 const MAX_RETRIES = 2
 const RETRY_DELAY_MS = 1000
-/** Unused data leaves memory after a minute. */
-const GC_TIME_MS = 60_000
+/**
+ * Unused data stays 30 min: a tab switch renders from the cache at once. SSE invalidations keep it
+ * fresh (an inactive query invalidated is refetched on its next mount; a fresh one is not).
+ */
+const GC_TIME_MS = 30 * 60_000
 
 /** Data lives by the SSE stream: never stale on its own, no polling, no refetch on focus. */
 export function createQueryClient(): QueryClient {
@@ -55,12 +58,13 @@ export function useGatewayStatus<T>(select: (status: GatewayStatus) => T) {
   return useQuery({ ...statusQuery, select })
 }
 
+export const dispatcherBudgetQuery = {
+  queryKey: queryKeys.dispatcherBudget,
+  queryFn: ({ signal }: { signal: AbortSignal }) => apiGet<DispatcherBudget>('/dispatcher/budget', signal),
+}
+
 export function useDispatcherBudget<T>(select: (budget: DispatcherBudget) => T) {
-  return useQuery({
-    queryKey: queryKeys.dispatcherBudget,
-    queryFn: ({ signal }) => apiGet<DispatcherBudget>('/dispatcher/budget', signal),
-    select,
-  })
+  return useQuery({ ...dispatcherBudgetQuery, select })
 }
 
 /** The last persisted snapshot, read only when the daemon has no live one. */

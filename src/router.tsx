@@ -21,6 +21,7 @@ import { EmptyState } from './components/ui/EmptyState'
 import { UnreachablePage } from './components/UnreachablePage'
 import { useIsMobile } from './lib/media'
 import { useGlobalShortcuts } from './lib/shortcuts'
+import { PAGE_LOADERS, prefetchMainPagesWhenIdle } from './pages/loaders'
 import { useConnection } from './realtime/context'
 import type { ConnectionState } from './realtime/events'
 
@@ -37,6 +38,7 @@ function Layout() {
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const [palette, setPalette] = useState(false)
   const [runDialog, setRunDialog] = useState(false)
+  useEffect(prefetchMainPagesWhenIdle, [])
   useGlobalShortcuts({ openPalette: () => setPalette(true), go: (to) => void navigate({ to }) })
   useEffect(() => {
     document.title = `${pageTitle(pathname)} · aidp-studio`
@@ -83,18 +85,18 @@ const rootRoute = createRootRoute({ component: Layout, notFoundComponent: NotFou
 
 /** One chunk per page: the first load only fetches the shell and the page shown. */
 const pages = [
-  createRoute({ getParentRoute: () => rootRoute, path: '/', component: lazyRouteComponent(() => import('./pages/home/HomePage')) }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/board', component: lazyRouteComponent(() => import('./pages/board/BoardPage')) }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/issue/$key', component: lazyRouteComponent(() => import('./pages/issue/IssuePage')) }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/inbox', component: lazyRouteComponent(() => import('./pages/inbox/InboxPage')) }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/unity', component: lazyRouteComponent(() => import('./pages/unity/UnityPage')) }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/budget', component: lazyRouteComponent(() => import('./pages/budget/BudgetPage')) }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/memory', component: lazyRouteComponent(() => import('./pages/memory/MemoryPage')) }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/art', component: lazyRouteComponent(() => import('./pages/art/ArtPage')) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/', component: lazyRouteComponent(PAGE_LOADERS['/']) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/board', component: lazyRouteComponent(PAGE_LOADERS['/board']) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/issue/$key', component: lazyRouteComponent(PAGE_LOADERS['/issue/$key']) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/inbox', component: lazyRouteComponent(PAGE_LOADERS['/inbox']) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/unity', component: lazyRouteComponent(PAGE_LOADERS['/unity']) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/budget', component: lazyRouteComponent(PAGE_LOADERS['/budget']) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/memory', component: lazyRouteComponent(PAGE_LOADERS['/memory']) }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/art', component: lazyRouteComponent(PAGE_LOADERS['/art']) }),
   createRoute({
     getParentRoute: () => rootRoute,
     path: '/settings',
-    component: lazyRouteComponent(() => import('./pages/settings/SettingsPage')),
+    component: lazyRouteComponent(PAGE_LOADERS['/settings']),
   }),
 ] as const
 
