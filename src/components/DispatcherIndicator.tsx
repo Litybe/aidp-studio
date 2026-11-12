@@ -15,6 +15,11 @@ export function dispatcherSummary(state: DispatcherState, budgetPaused: boolean)
   return { label: 'actif', tone: 'ok' }
 }
 
+/** Pure: ` · bugs 1/1` when the daemon reports a bug lane, else nothing. */
+export function bugLaneLabel(slots: DispatcherState['slots']): string {
+  return slots.bugMax === undefined ? '' : ` · bugs ${slots.bugUsed ?? 0}/${slots.bugMax}`
+}
+
 const selectBudgetPaused = (budget: { verdict: { verdict: string } }) => budget.verdict.verdict === 'paused'
 const identity = (state: DispatcherState) => state
 
@@ -28,6 +33,7 @@ export function DispatcherIndicator({ onClick, className = '' }: { onClick?: () 
   const pill = (
     <Pill tone={tone} dot title={title || undefined} className={className}>
       Dispatcher : {label} · {state.slots.used}/{state.slots.max}
+      {bugLaneLabel(state.slots)}
     </Pill>
   )
   if (!onClick) return pill

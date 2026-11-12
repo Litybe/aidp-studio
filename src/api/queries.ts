@@ -108,7 +108,8 @@ export interface DispatcherState {
   waitUntil: string | null
   lastTickAt: string
   lastReason: string
-  slots: { used: number; max: number; testUsed: number; testMax: number }
+  /** `bugUsed` / `bugMax`: the bug lane; absent on a daemon that predates it. */
+  slots: { used: number; max: number; testUsed: number; testMax: number; bugUsed?: number; bugMax?: number }
   running: { key: string; sessionId: string; project: string; startedAt: string }[]
 }
 

@@ -29,6 +29,10 @@ export interface Ticket {
   priority?: string
   service?: string
   labels?: string[]
+  /** Issue type as the daemon serializes it (`Story`, `Task`, `Bug`, `Spike`). */
+  type?: string
+  /** Derived tags of the daemon; `aidp/bug` marks a bug. */
+  tags?: string[]
   route?: TicketRoute | null
   milestone?: Milestone | null
   githubNumber?: number | null

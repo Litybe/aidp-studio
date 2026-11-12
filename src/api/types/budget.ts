@@ -71,7 +71,7 @@ export interface BudgetSettings {
     per_ticket: PerTicketBudget
     pixellab: { min_reserve: number; per_ticket: number }
   }
-  dispatcher: { slots: number; /** C13: test lane; absent on a daemon that predates it. */ test_slots?: number; stop_at_7d_percent: number | null; night: NightSettings }
+  dispatcher: { slots: number; /** C13: test lane; absent on a daemon that predates it. */ test_slots?: number; /** Bug lane; absent on a daemon that predates it. */ bug_slots?: number; stop_at_7d_percent: number | null; night: NightSettings }
 }
 
 /** Body of `PUT /api/settings/budget`: any subset of the keys; `stop_at_7d_percent: null` clears the stop. */
@@ -80,7 +80,7 @@ export interface BudgetUpdate {
     per_ticket?: Partial<PerTicketBudget>
     pixellab?: Partial<BudgetSettings['budget']['pixellab']>
   }
-  dispatcher?: { slots?: number; test_slots?: number; stop_at_7d_percent?: number | null; night?: Partial<NightSettings> }
+  dispatcher?: { slots?: number; test_slots?: number; bug_slots?: number; stop_at_7d_percent?: number | null; night?: Partial<NightSettings> }
 }
 
 /** Reply flags of every `PUT /api/settings/*`; the rest of the reply has the shape of the `GET`. */
