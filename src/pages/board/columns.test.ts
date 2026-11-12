@@ -1,5 +1,5 @@
 import type { Ticket } from '../../api/types'
-import { buildBoard, canSendToTest, columnOf, COLUMNS, displayTitle, routeOf, ticketNumber } from './columns'
+import { buildBoard, canSendToTest, columnOf, COLUMNS, displayTitle, forceTargetsFor, routeOf, ticketNumber } from './columns'
 
 describe('displayTitle', () => {
   it.each([
@@ -114,5 +114,13 @@ describe('test lane', () => {
     expect(canSendToTest(t({ ...review, flowSummary: flow('done') }))).toBe(true)
     expect(canSendToTest(t({ ...review, flowSummary: flow('running') }))).toBe(false)
     expect(canSendToTest(t({ status: 'in-progress', labels: ['aidp:to-test'], flowSummary: flow('done') }))).toBe(false)
+  })
+})
+
+describe('forceTargetsFor', () => {
+  it('offers every column but the one of the ticket', () => {
+    const toTest: Ticket = { key: 'GH-3', summary: 'x', status: 'in-progress', labels: ['aidp:to-test'] }
+    const ids = forceTargetsFor(toTest).map((target) => target.id)
+    expect(ids).toEqual(['ready', 'review', 'testing', 'merge', 'blocked', 'done'])
   })
 })
