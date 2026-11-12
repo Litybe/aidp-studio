@@ -15,6 +15,7 @@ import { RouteBadge } from '../board/RouteBadge'
 import { ticketIconStatus } from '../board/ticketStatus'
 import { costLabel, FLOW_PILL } from '../board/TicketCard'
 import { CostSection } from './CostSection'
+import { ForceMove } from '../board/ForceMove'
 import { DoctorPanel } from './DoctorPanel'
 import { IssueActions } from './IssueActions'
 import { MergeStateBadge } from './MergeStateBadge'
@@ -127,6 +128,7 @@ function Header({
         ) : null}
       </div>
       <UnblockBlock ticket={ticket} flow={flow} />
+      <ForceMove ticket={ticket} />
       {flow ? (
         <IssueActions
           flow={flow}
