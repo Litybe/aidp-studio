@@ -31,6 +31,24 @@ const running: Ticket = {
 }
 
 describe('BoardPage', () => {
+  it('puts bugs on their own red board, apart from the dev board', async () => {
+    const bug: Ticket = { key: 'GH-20', summary: 'Crash au dash', status: 'todo', labels: ['bug'], tags: ['aidp/bug'], type: 'Bug', githubNumber: 20 }
+    mockApi({ 'GET /tickets': { body: [ready, bug] }, 'GET /queue': { body: [] } })
+    renderPage(BoardPage)
+    const bugBoard = await screen.findByRole('region', { name: 'Board bugs' })
+    expect(within(bugBoard).getByText('#20')).toBeInTheDocument()
+    expect(within(bugBoard).queryByText('#12')).not.toBeInTheDocument()
+    expect(screen.getAllByText('#12')).toHaveLength(1)
+    expect(screen.getByTestId('card-GH-20')).toHaveAttribute('data-bug', 'true')
+  })
+
+  it('shows no bug board without a bug', async () => {
+    mockApi({ 'GET /tickets': { body: [ready] }, 'GET /queue': { body: [] } })
+    renderPage(BoardPage)
+    await screen.findByText('Dash en l’air')
+    expect(screen.queryByRole('region', { name: 'Board bugs' })).not.toBeInTheDocument()
+  })
+
   it('shows the cards in their column with number, route, milestone, step and cost', async () => {
     mockApi({
       'GET /tickets': { body: [ready, running] },

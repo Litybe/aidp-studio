@@ -11,7 +11,8 @@ import { Icon } from '../../components/ui/Icon'
 import { Pill } from '../../components/ui/Pill'
 import { elapsedLabel, formatTokens, formatUsd } from '../../lib/format'
 import { useTicker } from '../../realtime/context'
-import { blockedReason, canSendToTest, columnOf, displayTitle, routeOf, ticketNumber } from './columns'
+import { blockedReason, canSendToTest, columnOf, displayTitle, isBug, routeOf, ticketNumber } from './columns'
+import { BugBadge } from './BugBadge'
 import { RecoveryButtons, factsOfSummary } from '../issue/Unblock'
 import { ForceMove } from './ForceMove'
 import { RouteBadge } from './RouteBadge'
@@ -153,16 +154,20 @@ export const TicketCard = memo(function TicketCard({ ticket, queue }: CardProps)
   const step = flow?.stepId ?? flow?.phase ?? null
   const pill = flow ? FLOW_PILL[flow.status] : undefined
   const live = flow?.startedAt && ACTIVE_FLOW.has(flow.status)
+  const bug = isBug(ticket)
+  const edge = bug ? 'border-l-4 border-l-red-500' : ''
   return (
     <article
-      className={`group rounded-card border bg-card p-2.5 transition-colors hover:border-line-strong ${open ? 'border-line-strong' : 'border-line'}`}
+      className={`group rounded-card border bg-card p-2.5 transition-colors hover:border-line-strong ${edge} ${open ? 'border-line-strong' : 'border-line'}`}
       data-testid={`card-${ticket.key}`}
+      data-bug={bug ? 'true' : undefined}
     >
       <header className="flex items-start gap-2">
         <span className="mt-0.5 shrink-0">
           <StatusIcon status={ticketIconStatus(ticket)} />
         </span>
         <RouteBadge route={routeOf(ticket)} />
+        {bug ? <BugBadge /> : null}
         <Link
           to="/issue/$key"
           params={{ key: ticket.key }}

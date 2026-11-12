@@ -49,28 +49,35 @@ interface ColumnProps {
   label: string
   tickets: readonly Ticket[]
   queue: readonly QueueEntry[]
+  /** `bug`: the red column of the bug board. */
+  variant?: 'default' | 'bug'
 }
 
 /** One state of the board: a tinted header with the count, then the cards (virtualised when many). */
-export const Column = memo(function Column({ id, label, tickets, queue }: ColumnProps) {
+export const Column = memo(function Column({ id, label, tickets, queue, variant = 'default' }: ColumnProps) {
+  const bug = variant === 'bug'
+  const dot = bug ? 'bg-red-500' : DOT_TONE[COLUMN_TONE[id]]
   const empty = tickets.length === 0
   // An empty column folds into a thin strip: label and zero, no body.
   if (empty) {
     return (
       <section
-        className="flex w-9 shrink-0 flex-col items-center gap-2 rounded-card border border-dashed border-line bg-panel/40 py-2.5 text-xs text-ink-faint"
+        className={`flex w-9 shrink-0 flex-col items-center gap-2 rounded-card border border-dashed py-2.5 text-xs text-ink-faint ${bug ? 'border-red-900/60 bg-red-950/10' : 'border-line bg-panel/40'}`}
         aria-label={label}
       >
-        <span aria-hidden="true" className={`size-2 rounded-full ${DOT_TONE[COLUMN_TONE[id]]}`} />
+        <span aria-hidden="true" className={`size-2 rounded-full ${dot}`} />
         <h2 className="font-medium [writing-mode:vertical-rl]">{label}</h2>
         <span className="tabular-nums">0</span>
       </section>
     )
   }
   return (
-    <section className="flex min-h-0 w-72 shrink-0 snap-start flex-col rounded-card border border-line bg-panel/70" aria-label={label}>
+    <section
+      className={`flex min-h-0 w-72 shrink-0 snap-start flex-col rounded-card border ${bug ? 'border-red-900/60 bg-red-950/20' : 'border-line bg-panel/70'}`}
+      aria-label={label}
+    >
       <h2 className="flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-ink">
-        <span aria-hidden="true" className={`size-2 rounded-full ${DOT_TONE[COLUMN_TONE[id]]}`} />
+        <span aria-hidden="true" className={`size-2 rounded-full ${dot}`} />
         {label}
         <span className="ml-auto rounded-full bg-raised px-1.5 text-[0.6875rem] text-ink-muted tabular-nums">{tickets.length}</span>
       </h2>

@@ -60,6 +60,16 @@ export function columnOf(ticket: Ticket): ColumnId | null {
   return 'ready'
 }
 
+export const BUG_TAG = 'aidp/bug'
+const BUG_LABEL = 'bug'
+
+/** A bug: the daemon's `aidp/bug` tag, else its `Bug` type, else the GitHub `bug` label. */
+export function isBug(ticket: Ticket): boolean {
+  if (ticket.tags?.includes(BUG_TAG)) return true
+  if (ticket.type?.toLowerCase() === BUG_LABEL) return true
+  return (ticket.labels ?? []).some((label) => label.toLowerCase() === BUG_LABEL)
+}
+
 const ART = new Set(['pixelart', 'art', 'sprite'])
 const MAP = new Set(['map', 'ldtk', 'level', 'salle'])
 const DOC = new Set(['doc', 'bible', 'documentation'])

@@ -1,5 +1,5 @@
 import type { Ticket } from '../../api/types'
-import { buildBoard, canSendToTest, columnOf, COLUMNS, displayTitle, forceTargetsFor, routeOf, ticketNumber } from './columns'
+import { buildBoard, canSendToTest, columnOf, COLUMNS, displayTitle, forceTargetsFor, isBug, routeOf, ticketNumber } from './columns'
 
 describe('displayTitle', () => {
   it.each([
@@ -122,5 +122,15 @@ describe('forceTargetsFor', () => {
     const toTest: Ticket = { key: 'GH-3', summary: 'x', status: 'in-progress', labels: ['aidp:to-test'] }
     const ids = forceTargetsFor(toTest).map((target) => target.id)
     expect(ids).toEqual(['ready', 'review', 'testing', 'merge', 'blocked', 'done'])
+  })
+})
+
+describe('isBug', () => {
+  it('reads the aidp/bug tag, the Bug type or the bug label', () => {
+    expect(isBug(t({ tags: ['aidp/bug'] }))).toBe(true)
+    expect(isBug(t({ type: 'Bug' }))).toBe(true)
+    expect(isBug(t({ labels: ['bug'] }))).toBe(true)
+    expect(isBug(t({ type: 'Story', labels: ['feature'], tags: [] }))).toBe(false)
+    expect(isBug(t({}))).toBe(false)
   })
 })
