@@ -126,7 +126,7 @@ const ActiveRow = memo(function ActiveRow({ ticket }: { ticket: Ticket }) {
       <Pill tone={status.tone} dot>
         {status.label}
       </Pill>
-      {flow.status === 'running' ? <ActionButton label="Pause" onRun={() => pause.run()} /> : null}
+      {flow.status === 'running' ? <ActionButton label="Pause du flow" onRun={() => pause.run()} /> : null}
       <FeedbackLine feedback={pause.feedback} />
     </li>
   )
@@ -163,7 +163,7 @@ const BudgetCard = memo(function BudgetCard() {
           </Pill>
           {verdict.maxLaunches > 0 && !paused ? <span className="text-xs text-ink-faint">{verdict.maxLaunches} lancement{verdict.maxLaunches > 1 ? 's' : ''} max</span> : null}
           <span className="ml-auto">
-            <ActionButton label={paused ? 'Reprendre' : 'Mettre en pause'} tone={paused ? 'primary' : 'neutral'} onRun={() => dispatcher.run(paused ? 'resume' : 'pause')} />
+            <ActionButton label={paused ? 'Reprendre le dispatcher' : 'Pause du dispatcher'} tone={paused ? 'primary' : 'neutral'} onRun={() => dispatcher.run(paused ? 'resume' : 'pause')} />
           </span>
           <FeedbackLine feedback={dispatcher.feedback} />
         </div>

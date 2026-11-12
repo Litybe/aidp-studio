@@ -67,7 +67,7 @@ describe('HomePage', () => {
     expect(within(active).getByText('Sprite du héros')).toBeInTheDocument()
     expect(within(active).getByText('décision attendue')).toBeInTheDocument()
     expect(within(active).getByText('5 min')).toBeInTheDocument()
-    fireEvent.click(within(active).getByRole('button', { name: 'Pause' }))
+    fireEvent.click(within(active).getByRole('button', { name: 'Pause du flow' }))
     await waitFor(() => expect(calls.some((call) => call.path === '/flows/GH-13/pause')).toBe(true))
   })
 
