@@ -89,6 +89,7 @@ export const routes = {
   ticketStart: (key: string) => `/tickets/${seg(key)}/start`,
   ticketCancel: (key: string) => `/tickets/${seg(key)}/cancel`,
   ticketStatus: (key: string) => `/tickets/${seg(key)}/status`,
+  ticketForce: (key: string) => `/tickets/${seg(key)}/force`,
   ticketsSync: '/tickets/sync?source=github',
   flowPause: (key: string) => `/flows/${seg(key)}/pause`,
   flowResume: (key: string) => `/flows/${seg(key)}/resume`,

@@ -201,3 +201,29 @@ export const COLUMN_TONE: Record<ColumnId, Tone> = {
   blocked: 'danger',
   done: 'muted',
 }
+
+/** A column a ticket can be forced into by hand (`POST /tickets/:key/force`), skipping the steps before it. */
+export type ForceTarget = 'ready' | 'review' | 'to-test' | 'testing' | 'merge' | 'blocked' | 'done'
+
+export interface ForceTargetDef {
+  id: ForceTarget
+  label: string
+  column: ColumnId
+}
+
+/** The forced moves, in board order. Réalisation and En file are reached by starting the ticket. */
+export const FORCE_TARGETS: readonly ForceTargetDef[] = [
+  { id: 'ready', label: 'Prêtes', column: 'ready' },
+  { id: 'review', label: 'Revue', column: 'review' },
+  { id: 'to-test', label: 'À tester', column: 'to-test' },
+  { id: 'testing', label: 'Test Unity', column: 'test' },
+  { id: 'merge', label: 'À merger', column: 'merge' },
+  { id: 'blocked', label: 'Bloquées', column: 'blocked' },
+  { id: 'done', label: 'Faites', column: 'done' },
+]
+
+/** The forced moves offered for a ticket: every target but its own column. */
+export function forceTargetsFor(ticket: Ticket): ForceTargetDef[] {
+  const column = columnOf(ticket)
+  return FORCE_TARGETS.filter((target) => target.column !== column)
+}

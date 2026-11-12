@@ -13,6 +13,7 @@ import { elapsedLabel, formatTokens, formatUsd } from '../../lib/format'
 import { useTicker } from '../../realtime/context'
 import { blockedReason, canSendToTest, columnOf, displayTitle, routeOf, ticketNumber } from './columns'
 import { RecoveryButtons, factsOfSummary } from '../issue/Unblock'
+import { ForceMove } from './ForceMove'
 import { RouteBadge } from './RouteBadge'
 import { ticketIconStatus } from './ticketStatus'
 
@@ -130,6 +131,7 @@ export function CardActions({ ticket, queue }: CardProps) {
         <ActionButton label="Relancer l'étape" tone="primary" icon="refresh" onRun={send(routes.step(flow.flowKey, flow.stepId, 'retry'))} />
       ) : null}
       <RecoveryButtons ticket={ticket} flow={factsOfSummary(ticket)} stuck={false} />
+      <ForceMove ticket={ticket} />
       {column !== 'done' ? (
         <ActionButton
           label="Annuler"
