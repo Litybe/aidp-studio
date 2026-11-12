@@ -95,6 +95,9 @@ export function CardActions({ ticket, queue }: CardProps) {
 
   return (
     <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-t border-line pt-2.5">
+      <div className="basis-full">
+        <ForceMove ticket={ticket} />
+      </div>
       {canSendToTest(ticket) && !toTest.feedback.soon ? (
         <ActionButton label="Envoyer en test" tone="primary" icon="unity" onRun={() => toTest.run()} />
       ) : null}
@@ -132,7 +135,6 @@ export function CardActions({ ticket, queue }: CardProps) {
         <ActionButton label="Relancer l'étape" tone="primary" icon="refresh" onRun={send(routes.step(flow.flowKey, flow.stepId, 'retry'))} />
       ) : null}
       <RecoveryButtons ticket={ticket} flow={factsOfSummary(ticket)} stuck={false} />
-      <ForceMove ticket={ticket} />
       {column !== 'done' ? (
         <ActionButton
           label="Annuler"
