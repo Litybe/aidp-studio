@@ -14,7 +14,6 @@ import { useTicker } from '../../realtime/context'
 import { blockedReason, canSendToTest, columnOf, displayTitle, isBug, routeOf, ticketNumber } from './columns'
 import { BugBadge } from './BugBadge'
 import { RecoveryButtons, factsOfSummary } from '../issue/Unblock'
-import { ForceMove } from './ForceMove'
 import { RouteBadge } from './RouteBadge'
 import { ticketIconStatus } from './ticketStatus'
 
@@ -95,9 +94,6 @@ export function CardActions({ ticket, queue }: CardProps) {
 
   return (
     <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-t border-line pt-2.5">
-      <div className="basis-full">
-        <ForceMove ticket={ticket} />
-      </div>
       {canSendToTest(ticket) && !toTest.feedback.soon ? (
         <ActionButton label="Envoyer en test" tone="primary" icon="unity" onRun={() => toTest.run()} />
       ) : null}
