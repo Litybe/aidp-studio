@@ -1,6 +1,8 @@
 import type { QueryKey } from '@tanstack/react-query'
 import { f2Keys } from '../api/f2Keys'
+import { f1Keys } from '../api/f1queries'
 import { queryKeys } from '../api/queries'
+import { ticketKeys } from '../api/targetedRefresh'
 import type { BusEvent } from '../api/types'
 import { FakeVisibility } from '../test/fakes'
 import { INVALIDATION_WINDOW_MS, InvalidationBatcher, keyId, keysForEvent } from './invalidation'
@@ -11,13 +13,13 @@ const ids = (keys: QueryKey[]) => keys.map(keyId).sort()
 describe('keysForEvent', () => {
   it('maps a flow step to the flow list and that flow', () => {
     expect(ids(keysForEvent(event('flow.step_changed', { key: 'GH-12', stepId: 'review' })))).toEqual(
-      ids([queryKeys.flows, queryKeys.flow('GH-12'), queryKeys.tickets]),
+      ids([queryKeys.flows, queryKeys.flow('GH-12'), f1Keys.tickets, f1Keys.ticket('GH-12'), f1Keys.cost('GH-12'), f1Keys.pr('GH-12')]),
     )
   })
 
-  it('maps a ticket transition to the tickets and the ticket flow', () => {
+  it('maps a ticket transition to the board list and that ticket only', () => {
     expect(ids(keysForEvent(event('ticket.status', { key: 'GH-3', from: 'todo', to: 'queued' })))).toEqual(
-      ids([queryKeys.tickets, queryKeys.flow('GH-3')]),
+      ids([f1Keys.tickets, ...ticketKeys('GH-3')]),
     )
   })
 
@@ -69,7 +71,7 @@ describe('InvalidationBatcher', () => {
     vi.advanceTimersByTime(1)
     expect(flush).toHaveBeenCalledTimes(1)
     expect(ids(flush.mock.calls[0]?.[0] ?? [])).toEqual(
-      ids([queryKeys.flows, queryKeys.flow('GH-12'), queryKeys.tickets, queryKeys.budget, queryKeys.gatewayStatus]),
+      ids([queryKeys.flows, queryKeys.flow('GH-12'), f1Keys.tickets, f1Keys.ticket('GH-12'), f1Keys.cost('GH-12'), f1Keys.pr('GH-12'), queryKeys.budget, queryKeys.gatewayStatus]),
     )
     vi.advanceTimersByTime(10 * INVALIDATION_WINDOW_MS)
     expect(flush).toHaveBeenCalledTimes(1)

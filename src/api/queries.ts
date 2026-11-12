@@ -26,19 +26,16 @@ export const queryKeys = {
 
 const MAX_RETRIES = 2
 const RETRY_DELAY_MS = 1000
-/**
- * Unused data stays 30 min: a tab switch renders from the cache at once. SSE invalidations keep it
- * fresh (an inactive query invalidated is refetched on its next mount; a fresh one is not).
- */
-const GC_TIME_MS = 30 * 60_000
+/** Unused data stays 60 s; data older than 60 s is refetched when a page mounts it (SSE invalidates sooner). */
+const CACHE_TIME_MS = 60_000
 
-/** Data lives by the SSE stream: never stale on its own, no polling, no refetch on focus. */
+/** Data lives by the SSE stream and goes stale after 60 s; no polling, no refetch on focus. */
 export function createQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: Number.POSITIVE_INFINITY,
-        gcTime: GC_TIME_MS,
+        staleTime: CACHE_TIME_MS,
+        gcTime: CACHE_TIME_MS,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
         refetchOnMount: true,
