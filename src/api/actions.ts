@@ -5,6 +5,13 @@ import type { ApiErrorBody } from './types'
 
 const JSON_TYPE = 'application/json'
 
+/** Called with the path of every successful POST; `main.tsx` plugs the targeted cache refresh in. */
+let actionListener: ((path: string) => void) | null = null
+
+export function setActionListener(listener: ((path: string) => void) | null): void {
+  actionListener = listener
+}
+
 /** A route the daemon does not have yet (C11): the UI shows "bientôt disponible", never an error. */
 export function isNotFound(error: unknown): boolean {
   return error instanceof ApiError && error.kind === 'http' && (error.status === 404 || error.status === 405)
@@ -33,6 +40,7 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
     throw new ApiError('unreachable', 'daemon injoignable')
   }
   if (!response.ok) throw await toError(response)
+  actionListener?.(path)
   const text = await response.text()
   if (text.length === 0) return undefined as T
   try {

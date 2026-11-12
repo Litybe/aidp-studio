@@ -1,6 +1,8 @@
 import type { QueryKey } from '@tanstack/react-query'
+import { f1Keys } from '../api/f1queries'
 import { f2Keys } from '../api/f2Keys'
 import { queryKeys } from '../api/queries'
+import { ticketKeys } from '../api/targetedRefresh'
 import type { BusEvent } from '../api/types'
 import { MEMORY_MODEL_EVENT } from '../api/types/memoryModel'
 import type { VisibilitySource } from '../lib/visibility'
@@ -30,6 +32,12 @@ const flowOf = (event: BusEvent): QueryKey[] => {
   return key ? [queryKeys.flow(key)] : []
 }
 
+/** The board list plus the queries of the event's ticket (`data.key`); every ticket query without one. */
+const ticketOf = (event: BusEvent): QueryKey[] => {
+  const key = stringField(event.data, 'key')
+  return key ? [f1Keys.tickets, ...ticketKeys(key)] : [queryKeys.tickets]
+}
+
 /**
  * Bus event type → TanStack Query keys to invalidate (§7.1 of PLAN-GAMEDEV.md).
  * A key invalidates every query it prefixes: `['budget']` covers `['budget', 'dispatcher']`.
@@ -37,11 +45,11 @@ const flowOf = (event: BusEvent): QueryKey[] => {
 export const INVALIDATION_RULES: readonly InvalidationRule[] = [
   { type: 'flow.*', keys: always(queryKeys.flows) },
   { type: 'flow.*', keys: flowOf },
-  { type: 'flow.*', keys: always(queryKeys.tickets) }, // F1: `flowSummary` of the board cards
+  { type: 'flow.*', keys: ticketOf },
   { type: 'flow.waiting_you', keys: always(queryKeys.inbox) },
-  { type: 'flow.ended', keys: always(queryKeys.inbox, queryKeys.tickets) },
+  { type: 'flow.ended', keys: always(queryKeys.inbox) },
   { type: 'doctor.incident', keys: flowOf },
-  { type: 'ticket.*', keys: always(queryKeys.tickets) },
+  { type: 'ticket.*', keys: ticketOf },
   { type: 'ticket.status', keys: flowOf },
   { type: 'gateway.rate_limit', keys: always(queryKeys.budget, queryKeys.gatewayStatus) },
   { type: 'dispatcher.*', keys: always(queryKeys.dispatcher, queryKeys.budget) },

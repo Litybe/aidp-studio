@@ -11,7 +11,7 @@
  *    (~300 ms window, deduplicated by key). One global countdown timer, 1 Hz at most, stopped
  *    while the tab is hidden; a hidden tab renders nothing and replays its invalidations on return.
  *    TanStack Query: long staleTime, refetchOnWindowFocus false, no refetchInterval, bounded retry.
- * 3. RAM: gcTime 30 min (tab switches render from the cache; SSE keeps it fresh); bounded rings for every stream (events, journal, session stream);
+ * 3. RAM: gcTime 60 s, staleTime 60 s (a tab revisited within a minute renders from the cache; SSE keeps it fresh; an action refreshes only its ticket); bounded rings for every stream (events, journal, session stream);
  *    long lists virtualised (@tanstack/react-virtual) when F1 has them; no global store duplicating
  *    the Query cache; no Devtools in the production build.
  * 4. Bundle: one chunk per route (lazy); no heavy dependency (no chart lib, moment, lodash: use
@@ -23,7 +23,9 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { setActionListener } from './api/actions'
 import { createQueryClient } from './api/queries'
+import { refreshAfterAction } from './api/targetedRefresh'
 import './index.css'
 import { RealtimeContext } from './realtime/context'
 import { createRealtime } from './realtime/runtime'
@@ -31,6 +33,7 @@ import { createAppRouter } from './router'
 
 const queryClient = createQueryClient()
 const realtime = createRealtime(queryClient)
+setActionListener((path) => refreshAfterAction(path, queryClient))
 const router = createAppRouter()
 realtime.stream.start()
 
