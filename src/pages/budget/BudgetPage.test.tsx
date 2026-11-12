@@ -224,4 +224,34 @@ describe('Pixellab card', () => {
     renderPage(BudgetPage)
     expect(await screen.findByText(/1436\.6 générations restantes/)).toBeInTheDocument()
   })
+
+  it('edits the bug places when the daemon sends them, read-only otherwise', async () => {
+    const withBug = { ...SETTINGS, dispatcher: { ...SETTINGS.dispatcher, bug_slots: 1 } }
+    const calls = mockFetch({
+      'GET /dispatcher/budget': { body: BUDGET },
+      'GET /settings/budget': { body: withBug },
+      'PUT /settings/budget': { body: { ...withBug, reloadRequired: false, changed: true } },
+    })
+    renderPage(BudgetPage)
+    const field = await screen.findByLabelText('Places de bug')
+    expect(field).not.toHaveAttribute('readonly')
+    await userEvent.clear(field)
+    await userEvent.type(field, '2')
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    await screen.findByLabelText('Places de bug')
+    expect(calls.filter((call) => call.method === 'PUT').at(-1)?.body).toMatchObject({ dispatcher: { bug_slots: 2 } })
+  })
+
+  it('shows the bug places read-only and never sends them when the daemon omits them', async () => {
+    const calls = mockFetch({
+      'GET /dispatcher/budget': { body: BUDGET },
+      'GET /settings/budget': { body: SETTINGS },
+      'PUT /settings/budget': { body: { ...SETTINGS, reloadRequired: false, changed: true } },
+    })
+    renderPage(BudgetPage)
+    expect(await screen.findByLabelText('Places de bug')).toHaveAttribute('readonly')
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    await waitFor(() => expect(calls.some((call) => call.method === 'PUT')).toBe(true))
+    expect(JSON.stringify(calls.filter((call) => call.method === 'PUT').at(-1)?.body)).not.toContain('bug_slots')
+  })
 })

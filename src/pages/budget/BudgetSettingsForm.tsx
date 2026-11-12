@@ -38,6 +38,8 @@ export function BudgetSettingsForm({ settings }: { settings: BudgetSettings }) {
   const [slots, setSlots] = useState(String(dispatcher.slots))
   const testSlotsKnown = dispatcher.test_slots !== undefined
   const [testSlots, setTestSlots] = useState(testSlotsKnown ? String(dispatcher.test_slots) : '')
+  const bugSlotsKnown = dispatcher.bug_slots !== undefined
+  const [bugSlots, setBugSlots] = useState(bugSlotsKnown ? String(dispatcher.bug_slots) : '')
   const [night, setNight] = useState(dispatcher.night)
   const [windowMinutes, setWindowMinutes] = useState(String(dispatcher.night.heavy_window_minutes))
   const [stop, setStop] = useState(dispatcher.stop_at_7d_percent === null ? '' : String(dispatcher.stop_at_7d_percent))
@@ -64,6 +66,7 @@ export function BudgetSettingsForm({ settings }: { settings: BudgetSettings }) {
     if (perIssue !== undefined) pixellab.per_ticket = perIssue
     const slotCount = number('dispatcher.slots', slots)
     const testSlotCount = testSlotsKnown ? number('dispatcher.test_slots', testSlots) : undefined
+    const bugSlotCount = bugSlotsKnown ? number('dispatcher.bug_slots', bugSlots) : undefined
     const stopPercent = number('dispatcher.stop_at_7d_percent', stop)
     const heavyWindow = number('dispatcher.night.heavy_window_minutes', windowMinutes)
     setLocal(problems)
@@ -73,6 +76,7 @@ export function BudgetSettingsForm({ settings }: { settings: BudgetSettings }) {
       dispatcher: {
         ...(slotCount === undefined ? {} : { slots: slotCount }),
         ...(testSlotCount === undefined ? {} : { test_slots: testSlotCount }),
+        ...(bugSlotCount === undefined ? {} : { bug_slots: bugSlotCount }),
         stop_at_7d_percent: stopPercent ?? null,
         night: { ...night, ...(heavyWindow === undefined ? {} : { heavy_window_minutes: heavyWindow }) },
       },
@@ -130,6 +134,19 @@ export function BudgetSettingsForm({ settings }: { settings: BudgetSettings }) {
           aria-label="Places de test"
         />
         <Errors messages={errors('dispatcher.test_slots')} />
+      </label>
+      <label className="flex flex-wrap items-center gap-2">
+        <span className="w-40 text-ink-soft">Places de bug</span>
+        <input
+          className={INPUT}
+          inputMode="numeric"
+          value={bugSlotsKnown ? bugSlots : ''}
+          placeholder={bugSlotsKnown ? undefined : 'non communiqué'}
+          readOnly={!bugSlotsKnown}
+          onChange={(event) => setBugSlots(event.target.value)}
+          aria-label="Places de bug"
+        />
+        <Errors messages={errors('dispatcher.bug_slots')} />
       </label>
       <fieldset className="flex flex-col gap-1">
         <legend className="mb-1 text-xs text-ink-muted">Mode nuit</legend>
